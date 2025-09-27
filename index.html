@@ -127,8 +127,10 @@
           const [dadosCliente, setDadosCliente] = useState({
             nome: '',
             endereco: '',
+            // NOVO CAMPO: Ponto de Referência
+            pontoReferencia: '', 
             whatsapp: '',
-            email: '' // O email agora é obrigatório
+            email: '' 
           });
 
           // Calcula o valor final e o valor do desconto
@@ -150,37 +152,39 @@
             };
           }, [planoSelecionado, querDesconto]);
           
-          // Validação mínima do cadastro (E-mail agora é obrigatório)
+          // Validação mínima do cadastro (agora inclui Ponto de Referência)
           const isCadastroValid = useMemo(() => {
-            const { nome, endereco, whatsapp, email } = dadosCliente;
+            const { nome, endereco, whatsapp, email, pontoReferencia } = dadosCliente;
             // Regex simples para validar se o email tem um formato básico (algo@algo.algo)
             const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
             return (
               nome.trim() !== '' && 
               endereco.trim() !== '' && 
+              pontoReferencia.trim() !== '' && // VERIFICAÇÃO DO NOVO CAMPO
               whatsapp.length >= 10 &&
               isEmailValid
             );
           }, [dadosCliente]);
 
-          // Mensagem do WhatsApp com todos os dados - FORMATO MELHORADO COM EMOJIS E TÓPICOS
+          // Mensagem do WhatsApp com todos os dados
           const whatsappMessage = useMemo(() => {
-            const { nome, endereco, whatsapp, email } = dadosCliente;
+            const { nome, endereco, whatsapp, email, pontoReferencia } = dadosCliente; // Incluindo Ponto de Referência
             const plano = PLANOS[planoSelecionado]?.nome || 'Plano Não Selecionado';
             
             let msg = `🚀 CONFIRMAÇÃO DE SERVIÇO - FRONT! 🚀\n\n`;
             
             msg += `Olá, gostaria de confirmar o serviço! Acabei de fazer o Pix de *R$ ${valorFinal}* para o Plano *${plano}*.\n\n`;
             
-            // Dados do Cliente (Melhor formatado)
+            // Dados do Cliente
             msg += `📝 *DADOS DO CLIENTE E ENDEREÇO*\n`;
             msg += `* 👤 Nome: ${nome}\n`;
             msg += `* 📍 Endereço: ${endereco}\n`;
+            msg += `* 💡 Ponto de Ref.: ${pontoReferencia}\n`; // ADICIONADO PONTO DE REFERÊNCIA
             msg += `* 📱 WhatsApp: ${whatsapp}\n`;
             msg += `* 📧 E-mail: ${email}\n\n`;
             
-            // Detalhes da Contratação (Melhor formatado)
+            // Detalhes da Contratação
             msg += `✅ *DETALHES DA CONTRATAÇÃO*\n`;
             msg += `* 🏷️ Plano Escolhido: ${plano}\n`;
             msg += `* 💰 Valor Pago (Pix): R$ ${valorFinal}\n`;
@@ -205,7 +209,7 @@
             if (isCadastroValid) {
               setPasso(2); // Vai para a Escolha do Plano
             } else {
-              console.error('Por favor, preencha todos os campos obrigatórios (Nome, Endereço, WhatsApp e E-mail válido).');
+              console.error('Por favor, preencha todos os campos obrigatórios (Nome, Endereço, Ponto de Referência, WhatsApp e E-mail válido).');
             }
           };
 
@@ -512,7 +516,7 @@
             return (
               <div className="max-w-xl mx-auto p-6 md:p-10 bg-white shadow-2xl rounded-xl mt-8 border-4 border-slate-700">
                 <h1 className="text-3xl font-extrabold text-slate-700 text-center mb-1">Passo 1: Cliente Front</h1>
-                <p className="text-gray-500 text-center mb-8">Precisamos destas informações para agendar, prestar o serviço e enviar lembretes de pagamento.</p>
+                <p className="text-gray-500 text-center mb-8">Precisamos destas informações para agendar, prestar o serviço e encontrar sua casa.</p>
 
                 <div className="space-y-4">
                     <input
@@ -528,6 +532,15 @@
                         name="endereco"
                         placeholder="Endereço de Limpeza (Rua, Número, Bairro) *"
                         value={dadosCliente.endereco}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
+                    />
+                    {/* NOVO CAMPO: Ponto de Referência */}
+                    <input
+                        type="text"
+                        name="pontoReferencia"
+                        placeholder="Ponto de Referência (Obrigatório para localização) *"
+                        value={dadosCliente.pontoReferencia}
                         onChange={handleInputChange}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
                     />
