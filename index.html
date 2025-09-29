@@ -94,32 +94,41 @@
     const WHATSAPP_NUMERO = "14981150675"; 
     const PIX_CNPJ = "60676425000147"; 
     const PIX_BANCO_INFO = "Banco Inter (Conta MEI)";
-    const DESCONTO_PERCENTUAL = 0.08; 
+
+    // NOVOS PERCENTUAIS DE DESCONTO
+    const DESCONTO_PERCENTUAL_PLANO1 = 0.05; // 5% para o Plano Básico
+    const DESCONTO_PERCENTUAL_PLANO2 = 0.08; // 8% para o Plano Premium
 
     const PLANOS = {
         plano1: {
-            nome: "Conservação Essencial",
+            nome: "Básico",
             preco: 24.90,
             limpezas: "até 2 conservações ao mês",
             detalhes: [
                 "Varrição e Coleta de Lixo",
                 "Poda Leve de Matos e ervas daninhas",
                 "Escovação manual leve para sujeira superficial",
-                "Conservação superficial de até 5 degraus e meio-fio adjacente"
+                "Conservação superficial de até 5 degraus e meio-fio adjacente",
+                "<span class='text-gray-400'>Relatório Digital de Segurança (Não Incluído)</span>",
+                "<span class='text-gray-400'>Aplicação de Inibidor de Crescimento (Não Incluído)</span>"
             ],
-            foco: "Manutenção e aparência básica. Não inclui remoção de musgo incrustado ou lodo."
+            foco: "Manutenção e aparência básica. Não inclui remoção de musgo incrustado ou lodo.",
+            descontoPercentual: DESCONTO_PERCENTUAL_PLANO1
         },
         plano2: {
-            nome: "Conservação Completa 'Max'",
+            nome: "Premium",
             preco: 29.90,
-            limpezas: "até 10 conservações ao mês",
+            limpezas: "até 5 conservações ao mês", 
             detalhes: [
-                "Tudo do Plano Essencial (Varrição e Coleta)",
+                "Tudo do Plano Básico (Varrição e Coleta)",
                 "Raspagem e Desincrustação Profunda de musgos e lodo",
                 "Escovação com Ferramenta a seco de alta potência",
-                "Conservação completa de escadas e raspagem total do meio-fio"
+                "Conservação completa de escadas e raspagem total do meio-fio",
+                "<span class='font-bold text-blue-600'>Relatório Digital de Segurança Pós-Serviço</span>",
+                "<span class='font-bold text-blue-600'>Aplicação de Inibidor de Crescimento (Pó)</span>"
             ],
-            foco: "Conservação profunda e restauração da aparência, garantindo mais segurança e durabilidade."
+            foco: "Conservação profunda e restauração da aparência, garantindo mais segurança e durabilidade.",
+            descontoPercentual: DESCONTO_PERCENTUAL_PLANO2
         }
     };
 
@@ -203,9 +212,13 @@
         const [planoSelecionado, setPlanoSelecionado] = useState(PLANOS.plano1.nome);
 
         // Calcula o preço final, desconto e valor diário
-        const { precoBase, precoFinal, valorDesconto, precoDiario, planoEscolhido } = useMemo(() => {
+        const { precoBase, precoFinal, valorDesconto, planoEscolhido, percentualDesconto, precoDiario } = useMemo(() => {
             const plano = planoSelecionado === PLANOS.plano1.nome ? PLANOS.plano1 : PLANOS.plano2;
-            const desconto = descontoAtivo ? DESCONTO_PERCENTUAL : 0; 
+            
+            // O percentual de desconto varia conforme o plano
+            const percentual = plano.descontoPercentual; 
+            
+            const desconto = descontoAtivo ? percentual : 0; 
             const precoBase = plano.preco;
             const valorDesconto = precoBase * desconto;
             const precoFinal = precoBase - valorDesconto;
@@ -216,7 +229,8 @@
                 precoFinal: precoFinal.toFixed(2),
                 valorDesconto: valorDesconto.toFixed(2),
                 precoDiario: precoDiario.toFixed(2),
-                planoEscolhido: plano.nome
+                planoEscolhido: plano.nome,
+                percentualDesconto: (percentual * 100).toFixed(0)
             };
         }, [planoSelecionado, descontoAtivo]);
 
@@ -263,7 +277,7 @@
         // Mensagem final para o WhatsApp 
         const whatsappMessage = useMemo(() => {
             const descontoText = descontoAtivo 
-                ? `SIM (Economia de R$ ${valorDesconto})` 
+                ? `SIM (Economia de R$ ${valorDesconto} - ${percentualDesconto}%)` 
                 : `NÃO`;
             
             const valorBaseText = `R$ ${precoBase.toFixed(2)}`;
@@ -294,7 +308,7 @@ Recebemos seu cadastro com sucesso. Para desbloquear o serviço e agendarmos a p
 * Plano Escolhido: ${planoEscolhido}
 * Custo Diário: R$ ${precoDiario}
 * Valor Original: ${valorBaseText}
-* Desconto de 8% Aplicado: ${descontoText}
+* Desconto de ${percentualDesconto}% Aplicado: ${descontoText}
 * TOTAL A PAGAR (PIX): ${valorFinalText}
 * Data da Contratação: ${dateContratacao}
 
@@ -314,7 +328,7 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
             `.trim();
 
             return encodeURIComponent(mensagem);
-        }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase, precoDiario]);
+        }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase, precoDiario, percentualDesconto]);
 
         // Criando a URL final do WhatsApp aqui
         const whatsappUrl = useMemo(() => {
@@ -385,8 +399,9 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
             return (
                 <div className="modal-overlay">
                     <div className="modal-content text-center bg-yellow-50 border-t-8 border-yellow-500">
-                        <svg class="w-16 h-16 mx-auto text-yellow-500 mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.152A1.5 1.5 0 0112 1.625l2.052.527a1.5 1.5 0 001.076-.41l1.527-1.145c.82-.615 1.942.164 1.765 1.157l-.364 2.112a1.5 1.5 0 00.523 1.488l1.638 1.472c.74.664.33 1.83-.694 2.117l-1.996.556a1.5 1.5 0 00-.712 1.341l.243 2.053c.177.93-.836 1.63-1.636 1.012l-1.92-1.472a1.5 1.5 0 00-1.847 0l-1.92 1.472c-.8.618-1.813-.082-1.636-1.012l.243-2.053a1.5 1.5 0 00-.712-1.341l-1.996-.556c-1.024-.287-1.434-1.453-.694-2.117l1.638-1.472a1.5 1.5 0 00.523-1.488L4.908 2.864c-.177-.993.945-1.772 1.765-1.157l1.527 1.145a1.5 1.5 0 001.076.41l2.052-.527z"/>
+                        {/* CORRIGIDO: class -> className */}
+                        <svg className="w-16 h-16 mx-auto text-yellow-500 mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.152A1.5 1.5 0 0112 1.625l2.052.527a1.5 1.5 0 001.076-.41l1.527-1.145c.82-.615 1.942.164 1.765 1.157l-.364 2.112a1.5 1.5 0 00.523 1.488l1.638 1.472c.74.664.33 1.83-.694 2.117l-1.996.556a1.5 1.5 0 00-.712 1.341l.243 2.053c.177.93-.836 1.63-1.636 1.012l-1.92-1.472a1.5 1.5 0 00-1.847 0l-1.92 1.472c-.8.618-1.813-.082-1.636-1.012l.243-2.053a1.5 1.5 0 00-.712-1.341l-1.996-.556c-1.024-.287-1.434-1.453-.694-2.117l1.638-1.472a1.5 1.5 0 00.523-1.488L4.908 2.864c-.177-.993.945-1.772 1.765-1.157l1.527 1.145a1.5 1.5 0 001.076.41l2.052-.527z"/>
                         </svg>
                         <h2 className="text-4xl font-extrabold text-green-700 mb-4">SUCESSO!</h2>
                         <p className="text-xl text-gray-700 mb-6 leading-relaxed congrats-text">
@@ -594,6 +609,11 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
             
             const planoDiario1 = (PLANOS.plano1.preco / 30).toFixed(2);
             const planoDiario2 = (PLANOS.plano2.preco / 30).toFixed(2);
+            
+            // Determina a mensagem de desconto para exibição
+            const percentualMensagem = (planoSelecionado === PLANOS.plano1.nome) ? 
+                `${(PLANOS.plano1.descontoPercentual * 100).toFixed(0)}% OFF` : 
+                `${(PLANOS.plano2.descontoPercentual * 100).toFixed(0)}% OFF`;
 
             screenContent = (
                 <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-4xl">
@@ -640,8 +660,18 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                                     <div className="space-y-2 text-sm">
                                         {plano.detalhes.map((detalhe, i) => (
                                             <div key={i} className="flex items-start space-x-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black lucide lucide-check-circle mt-1 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 22 3-3"/><path d="m9 22 4-4"/></svg>
-                                                <span className="text-gray-700">{detalhe.replace('limpeza', 'conservação')}</span>
+                                                {/* Se o detalhe contém <span>, renderiza como HTML, senão, como texto simples com ícone */}
+                                                {detalhe.includes('<span') ? (
+                                                    <div className="flex items-start space-x-2">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide lucide-check-circle mt-1 flex-shrink-0 ${detalhe.includes('text-gray-400') ? 'text-gray-400' : 'text-black'}`}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 22 3-3"/><path d="m9 22 4-4"/></svg>
+                                                        <span dangerouslySetInnerHTML={{ __html: detalhe.replace('limpeza', 'conservação') }} className="text-gray-700"></span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-start space-x-2">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black lucide lucide-check-circle mt-1 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 22 3-3"/><path d="m9 22 4-4"/></svg>
+                                                        <span className="text-gray-700">{detalhe.replace('limpeza', 'conservação')}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -656,7 +686,7 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             ))}
                         </div>
 
-                        {/* DESCONTO OPCIONAL (8%) */}
+                        {/* DESCONTO OPCIONAL */}
                         <div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center mb-6">
                             <label className="flex items-center space-x-3 cursor-pointer">
                                 <input
@@ -666,22 +696,23 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                                     className="h-5 w-5 text-black border-gray-300 rounded focus:ring-black"
                                 />
                                 <span className="text-sm font-medium text-gray-800">
-                                    Quero <span className="text-green-600 font-bold">8% OFF</span>! (Eu fornecerei os sacos de lixo para a coleta)
+                                    Quero <span className="text-green-600 font-bold">{percentualMensagem}</span>! (Eu fornecerei os sacos de lixo para a coleta)
                                 </span>
                             </label>
-                            <span className="text-sm font-bold text-green-700">- 8%</span>
+                            <span className="text-sm font-bold text-green-700">- {percentualMensagem}</span>
                         </div>
 
-                        {/* TERMO DE CONSENTIMENTO */}
+                        {/* TERMO DE CONSENTIMENTO (COM ** REMOVIDOS) */}
                         <div className="bg-white p-4 border border-gray-300 rounded-lg mb-6">
-                            <h4 className="font-bold text-black mb-2">TERMO DE CONSENTIMENTO PARA CONTEÚDO</h4>
+                            <h4 className="font-bold text-black mb-2">TERMO DE CONSENTIMENTO PARA CONTEÚDO (Imagens/Vídeos)</h4>
                             <p className="text-sm text-gray-700 mb-3">
-                                Eu concordo em ceder as imagens da conservação da minha calçada para a criação de conteúdo do projeto Hocc.
+                                Ao aceitar, eu consinto a captação e uso de **fotos e vídeos** da conservação da minha calçada para a criação de conteúdo do projeto Hocc.
                             </p>
                             <ul className="text-xs text-gray-600 list-disc list-inside space-y-1 ml-4">
-                                <li>Motivo: As imagens são essenciais para documentar a performance do serviço, a metodologia a seco e educar sobre conservação (Metodologia POV).</li>
-                                <li>Oportunidade: O cliente tem total liberdade para usar o espaço do vídeo para divulgar seus próprios produtos, serviços ou mídias.</li>
-                                <li>Privacidade: Não gravamos rostos, endereços residenciais completos, placas de veículos ou pontos de referência privados. O foco é estritamente na calçada e no serviço executado.</li>
+                                {/* CORRIGIDO: class -> className */}
+                                <li><strong className='text-black'>Propósito:</strong> Documentação da eficácia do serviço, demonstração da metodologia a seco (Perspectiva POV) e fins educativos/marketing.</li>
+                                <li><strong className='text-black'>Promoção do Cliente:</strong> O cliente tem a liberdade de solicitar a inclusão de divulgação de seus próprios produtos ou mídias no conteúdo gerado.</li>
+                                <li><strong className='text-black'>Garantia de Privacidade:</strong> Não gravamos: rostos de moradores, informações pessoais, placas de veículos, nem detalhes internos da residência. O foco é estritamente na área da calçada e no trabalho executado, visando proteger a identidade do cliente e do local.</li>
                             </ul>
                             <div className="flex items-center mt-3">
                                 <input
@@ -779,14 +810,14 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                                 {/* DETALHE DO DESCONTO (ENFATIZANDO A ECONOMIA) */}
                                 {descontoAtivo && (
                                     <div className="flex justify-between pt-1 border-t border-dashed border-gray-300">
-                                        <span className="text-green-700 font-medium">2. Desconto Aplicado (<span className="text-blue-600 font-bold">8% OFF</span>):</span>
+                                        <span className="text-green-700 font-medium">2. Desconto Aplicado (<span className="text-blue-600 font-bold">{percentualDesconto}% OFF</span>):</span>
                                         <span className="text-green-700 font-bold">- R$ {valorDesconto}</span>
                                     </div>
                                 )}
                                 
                                 {/* TOTAL FINAL */}
                                 <div className="flex justify-between text-lg font-bold mt-3 pt-3 border-t-2 border-black">
-                                    <span className="text-black">{descontoAtivo ? '3. TOTAL A PAGAR (COM DESCONTO):' : '2. TOTAL A PAGAR (PIX):'}</span>
+                                    <span className="text-black">{descontoAtivo ? `3. TOTAL A PAGAR (COM ${percentualDesconto}% OFF):` : '2. TOTAL A PAGAR (PIX):'}</span>
                                     <span className={`font-extrabold ${descontoAtivo ? 'text-blue-600' : 'text-black'}`}>R$ {precoFinal}</span>
                                 </div>
 
