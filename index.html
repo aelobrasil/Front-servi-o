@@ -11,13 +11,7 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Estilos customizados para o botão Instagram e o ticket */
-        .instagram-btn {
-            position: fixed;
-            bottom: 2rem;
-            right: 1.5rem;
-            z-index: 50;
-        }
+        /* Estilos customizados para o ticket */
         .ticket-dashed-border {
             border: 2px dashed #334155; /* Cor slate-700 */
             border-radius: 0.5rem;
@@ -32,16 +26,53 @@
             box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
         }
 
-        /* NOVO ESTILO PARA O BOTÃO FINALIZAR (PASSO 3) */
+        /* ESTILO PARA O BOTÃO FINALIZAR (PASSO 3) */
         .btn-finalize {
             transition: all 0.3s ease-in-out;
-            /* Gradiente de azul para chamar atenção, similar ao branding do Plano Hocc */
             background-image: linear-gradient(to right, #0077B6 0%, #00B4D8 100%);
         }
         .btn-finalize:hover {
-            background-image: linear-gradient(to right, #00B4D8 0%, #0077B6 100%); /* Inverte o gradiente */
+            background-image: linear-gradient(to right, #00B4D8 0%, #0077B6 100%); 
             transform: scale(1.02); 
-            box-shadow: 0 10px 20px rgba(0, 119, 182, 0.5); /* Sombra mais proeminente */
+            box-shadow: 0 10px 20px rgba(0, 119, 182, 0.5); 
+        }
+
+        /* Estilos do Modal de Confirmação e Parabéns */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            width: 450px;
+        }
+        .congrats-text strong {
+            font-weight: 800;
+        }
+
+        /* --- ANIMAÇÃO DE TRANSIÇÃO ENTRE TELAS (FADE-IN COM SLIDE) --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Classe que será aplicada ao wrapper de cada passo para acionar a transição */
+        .screen-transition {
+            animation: fadeIn 0.5s ease-out forwards; /* 0.5s de duração */
+            min-height: 400px; /* Garante que o conteúdo não salte muito */
+            width: 100%;
         }
     </style>
     <!-- Carrega React, ReactDOM e Babel para rodar o JSX no navegador -->
@@ -51,7 +82,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-<div id="app"></div>
+<div id="app" class="relative w-full max-w-4xl"></div>
 
 <script type="text/babel">
     const { useState, useMemo } = React;
@@ -61,8 +92,9 @@
     const YOUTUBE_HOC_URL = "https://www.youtube.com/@1ao1-hocc";
     const INSTAGRAM_ARTHUR_URL = "https://instagram.com/Arthurhocc";
     const WHATSAPP_NUMERO = "14981150675"; 
-    const PIX_CNPJ = "33948580000160"; 
-    const DESCONTO_PERCENTUAL = 0.08; // Desconto de 8%
+    const PIX_CNPJ = "60676425000147"; 
+    const PIX_BANCO_INFO = "Banco Inter (Conta MEI)";
+    const DESCONTO_PERCENTUAL = 0.08; 
 
     const PLANOS = {
         plano1: {
@@ -93,26 +125,52 @@
 
     // --- COMPONENTES REUTILIZÁVEIS ---
 
-    // 1. Botão Flutuante do Instagram
-    const InstagramButton = () => (
-        <a 
-            href={INSTAGRAM_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="instagram-btn bg-black text-white hover:bg-gray-800 transition-colors duration-300 shadow-xl rounded-full p-4 flex items-center justify-center space-x-2"
+    // Componente Wrapper para Aplicar a Transição em Cada Passo
+    const ScreenWrapper = ({ children, passoAtual }) => (
+        <div 
+            key={passoAtual} 
+            className="screen-transition w-full flex justify-center"
         >
-            {/* Ícone simples do Instagram (SVG) */}
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.5" y1="6.5" y2="6.5"/></svg>
-        </a>
+            {children}
+        </div>
+    );
+    
+    // Componente SocialButtons no Canto Inferior Esquerdo
+    const SocialButtons = () => (
+        <div className="fixed bottom-4 left-4 z-50 flex space-x-3">
+            {/* YouTube Button (Red) */}
+            <a 
+                href={YOUTUBE_HOC_URL} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                title="Canal no YouTube Hocc"
+                className="bg-red-600 text-white hover:bg-red-700 transition-colors duration-300 shadow-xl rounded-full p-3 flex items-center justify-center transform hover:scale-105"
+            >
+                {/* SVG Icon for YouTube */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M21.543 6.49a2.378 2.378 0 0 0-1.683-1.684c-2.478-.65-4.957-.743-7.447-.738C8.598 4.068 6.12 4.16 3.642 4.811A2.378 2.378 0 0 0 1.959 6.49C1.309 8.97 1.22 11.45 1.22 13.94s.089 4.978.739 7.45a2.378 2.378 0 0 0 1.683 1.684c2.478.65 4.957.743 7.447.738 2.49-.005 4.968-.098 7.447-.738a2.378 2.378 0 0 0 1.683-1.684c.65-2.472.739-4.95.739-7.425s-.089-4.953-.739-7.425zm-11.233 11.75V8.19l6.3 4.5-6.3 4.5z"/></svg>
+            </a>
+            {/* Instagram Button (Black) */}
+            <a 
+                href={INSTAGRAM_URL} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                title="Instagram da Front!"
+                className="bg-black text-white hover:bg-gray-800 transition-colors duration-300 shadow-xl rounded-full p-3 flex items-center justify-center transform hover:scale-105"
+            >
+                {/* SVG Icon for Instagram */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.5" y1="6.5" y2="6.5"/></svg>
+            </a>
+        </div>
     );
 
-    // 2. Componente de Cabeçalho
-    const Header = ({ titulo, subtitulo, passoAtual, totalPassos, isHome = false }) => (
+
+    // Componente de Cabeçalho (Usado apenas nos passos 1, 2, 3 e 4)
+    const Header = ({ titulo, subtitulo, passoAtual, totalPassos }) => (
         <div className="text-center mb-6">
             <div className="flex justify-center items-center space-x-2 mb-2">
-                <h1 className={`font-extrabold text-black ${isHome ? 'text-5xl md:text-6xl tracking-tight' : 'text-3xl'}`}>{titulo}</h1>
+                <h1 className="text-3xl font-extrabold text-black">{titulo}</h1>
             </div>
-            <p className={`font-medium ${isHome ? 'text-lg text-gray-700' : 'text-sm text-gray-500'} mb-1`}>
+            <p className="text-sm text-gray-500 mb-1">
                 {subtitulo}
             </p>
              <p className="text-xs text-gray-700">
@@ -132,12 +190,13 @@
         const [passo, setPasso] = useState(0); // 0: Início, 1: Cadastro, 2: Plano, 3: Pagamento, 4: Recusa
         const [descontoAtivo, setDescontoAtivo] = useState(false);
         const [termoAceito, setTermoAceito] = useState(false);
-        const [isLoading, setIsLoading] = useState(false); // Mantido por segurança, mas não usado sem Gemini
+        const [showOrderSummary, setShowOrderSummary] = useState(false); // Modal de Resumo do Pedido (Anterior FinalConfirmationModal)
+        const [showFinanciadorCongrats, setShowFinanciadorCongrats] = useState(false); // NOVO: Modal de Parabéns Financiador
 
         const [formData, setFormData] = useState({
             nome: '',
             endereco: '',
-            pontoRef: '', // Campo obrigatório
+            pontoRef: '', 
             whatsapp: '',
             email: ''
         });
@@ -162,20 +221,46 @@
         }, [planoSelecionado, descontoAtivo]);
 
 
-        // --- VALIDAÇÕES ---
+        // --- VALIDAÇÕES E MÁSCARAS ---
+        
+        // Função de máscara de WhatsApp (XX) XXXXX-XXXX
+        const maskWhatsApp = (value) => {
+            if (!value) return value;
+            // Remove tudo que não for dígito
+            value = value.replace(/\D/g, '');
+
+            // Limita a 11 dígitos (DDD + 9 digitos)
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+
+            // Aplica a máscara (XX) XXXXX-XXXX
+            if (value.length > 0) {
+                value = '(' + value;
+            }
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ') ' + value.substring(3);
+            }
+            if (value.length > 9) {
+                value = value.substring(0, 9) + '-' + value.substring(9);
+            }
+            return value;
+        };
 
         const isCadastroValid = useMemo(() => {
-            // Verifica se todos os campos obrigatórios estão preenchidos
+            // Desmascara o WhatsApp para validação (deve ter 11 dígitos)
+            const unmaskedWhatsapp = formData.whatsapp.replace(/\D/g, '');
+            
             return (
                 formData.nome.trim() !== '' &&
                 formData.endereco.trim() !== '' &&
                 formData.pontoRef.trim() !== '' &&
-                formData.whatsapp.trim().length >= 8 && 
+                unmaskedWhatsapp.length === 11 && // Validação para 11 dígitos (DDD + Número)
                 /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()) // Validação básica de email
             );
         }, [formData]);
 
-        // Mensagem final para o WhatsApp com os emojis e formatação pedida
+        // Mensagem final para o WhatsApp 
         const whatsappMessage = useMemo(() => {
             const descontoText = descontoAtivo 
                 ? `SIM (Economia de R$ ${valorDesconto})` 
@@ -183,9 +268,14 @@
             
             const valorBaseText = `R$ ${precoBase.toFixed(2)}`;
             const valorFinalText = `R$ ${precoFinal}`;
-            const dateContratacao = new Date().toLocaleDateString('pt-BR'); // Data atual para formalidade
+            const dateContratacao = new Date().toLocaleDateString('pt-BR');
             
-            // CONTEÚDO DA MENSAGEM: Agora sem emojis, mantendo a formalidade e completude.
+            // Formatando o CNPJ para a mensagem do WhatsApp
+            const formattedCNPJ = PIX_CNPJ.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+
+            // ID do usuário, se disponível (para rastreio interno do Hocc)
+            const userId = typeof window !== 'undefined' && window.userId ? window.userId : 'anonimo';
+
             const mensagem = `
 *CONTRATAÇÃO FRONT! - PRÓXIMO PASSO*
 Prezado(a) ${formData.nome},
@@ -198,6 +288,7 @@ Recebemos seu cadastro com sucesso. Para desbloquear o serviço e agendarmos a p
 * Ponto de Ref.: ${formData.pontoRef}
 * WhatsApp: ${formData.whatsapp}
 * E-mail: ${formData.email}
+* ID de Rastreio (Hocc): ${userId}
 
 *DETALHES FINANCEIROS*
 * Plano Escolhido: ${planoEscolhido}
@@ -206,6 +297,10 @@ Recebemos seu cadastro com sucesso. Para desbloquear o serviço e agendarmos a p
 * Desconto de 8% Aplicado: ${descontoText}
 * TOTAL A PAGAR (PIX): ${valorFinalText}
 * Data da Contratação: ${dateContratacao}
+
+*DADOS DA CHAVE PIX*
+* Chave: CNPJ ${formattedCNPJ}
+* Instituição: ${PIX_BANCO_INFO}
 
 *TERMOS E CONDIÇÕES*
 * Termo de Gravação para Conteúdo (Hocc): ACEITO
@@ -230,7 +325,43 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
 
         const handleInputChange = (e) => {
             const { name, value } = e.target;
-            setFormData(prev => ({ ...prev, [name]: value }));
+            let newValue = value;
+
+            // Aplica a máscara apenas ao campo WhatsApp
+            if (name === 'whatsapp') {
+                newValue = maskWhatsApp(value);
+            }
+
+            setFormData(prev => ({ ...prev, [name]: newValue }));
+        };
+
+        const handleShowToast = (message, type = 'warning') => {
+            // Função para mostrar um "Toast" temporário (mensagens de erro/sucesso)
+            const messageBox = document.createElement('div');
+            let bgColor, borderColor, textColor;
+            
+            if (type === 'warning') {
+                bgColor = '#fefcbf'; // Amarelo claro
+                borderColor = '#fbd38d';
+                textColor = '#8a6d3b';
+            } else if (type === 'success') {
+                 bgColor = '#d1e7dd'; // Verde claro
+                 borderColor = '#badbcc';
+                 textColor = '#0f5132';
+            }
+
+            messageBox.innerHTML = message;
+            messageBox.style.cssText = `
+                position: fixed; top: 20px; right: 20px; background: ${bgColor}; 
+                border: 1px solid ${borderColor}; padding: 15px 20px; 
+                border-radius: 8px; z-index: 1000; font-weight: bold; color: ${textColor};
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: opacity 0.3s ease;
+            `;
+            document.body.appendChild(messageBox);
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(messageBox), 300);
+            }, 3000);
         };
 
         const handleProximoPassoCadastro = () => {
@@ -238,37 +369,125 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                 // Avança diretamente para o Passo 2: Escolha do Plano
                 setPasso(2);
             } else {
-                // Mensagem de erro (substituindo o alert)
-                const messageBox = document.createElement('div');
-                messageBox.innerHTML = '⚠️ Por favor, preencha todos os campos obrigatórios corretamente para avançar.';
-                messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fefcbf; border: 1px solid #fbd38d; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold;';
-                document.body.appendChild(messageBox);
-                setTimeout(() => document.body.removeChild(messageBox), 3000);
+                const whatsappError = formData.whatsapp.replace(/\D/g, '').length !== 11 ? ' (WhatsApp deve ter 11 dígitos: DDD + 9 dígitos)' : '';
+                handleShowToast(`⚠️ Por favor, preencha todos os campos obrigatórios corretamente para avançar${whatsappError}.`, 'warning');
             }
         };
+        
+        // --- COMPONENTE MODAL DE PARABÉNS (NOVO) ---
+        const FinanciadorCongratsModal = ({ nome, onClose, whatsappUrl }) => {
+            
+            const handleProceed = () => {
+                onClose(); // Fecha o modal
+                window.open(whatsappUrl, '_blank'); // Redireciona
+            }
+
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-content text-center bg-yellow-50 border-t-8 border-yellow-500">
+                        <svg class="w-16 h-16 mx-auto text-yellow-500 mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.152A1.5 1.5 0 0112 1.625l2.052.527a1.5 1.5 0 001.076-.41l1.527-1.145c.82-.615 1.942.164 1.765 1.157l-.364 2.112a1.5 1.5 0 00.523 1.488l1.638 1.472c.74.664.33 1.83-.694 2.117l-1.996.556a1.5 1.5 0 00-.712 1.341l.243 2.053c.177.93-.836 1.63-1.636 1.012l-1.92-1.472a1.5 1.5 0 00-1.847 0l-1.92 1.472c-.8.618-1.813-.082-1.636-1.012l.243-2.053a1.5 1.5 0 00-.712-1.341l-1.996-.556c-1.024-.287-1.434-1.453-.694-2.117l1.638-1.472a1.5 1.5 0 00.523-1.488L4.908 2.864c-.177-.993.945-1.772 1.765-1.157l1.527 1.145a1.5 1.5 0 001.076.41l2.052-.527z"/>
+                        </svg>
+                        <h2 className="text-4xl font-extrabold text-green-700 mb-4">SUCESSO!</h2>
+                        <p className="text-xl text-gray-700 mb-6 leading-relaxed congrats-text">
+                            Parabéns, <strong className="text-blue-600">{nome.split(' ')[0]}</strong>! 
+                            Você é oficialmente um <strong className="font-extrabold text-black">FINANCIADOR</strong> do projeto <strong className="font-extrabold text-green-600">Hocc 1 ao 1</strong>. 
+                            <br/><br/>
+                            Você tem uma parte <strong className="text-red-500">significante</strong> nessa história e agradecemos muito o seu apoio.
+                        </p>
+                        <button
+                            onClick={handleProceed}
+                            className="btn-finalize w-full py-3 px-6 text-lg font-bold text-white rounded-full shadow-lg shadow-green-500/50 uppercase tracking-wider flex items-center justify-center space-x-2 text-center bg-green-600 hover:bg-green-700"
+                        >
+                            Prosseguir para o WhatsApp
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+        
+        // --- COMPONENTE MODAL DE RESUMO DO PEDIDO (ORDEM 1) ---
+        const OrderSummaryModal = ({ onClose, nomeCliente, onProceedToCongrats }) => {
+            const formattedCNPJ = PIX_CNPJ.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="text-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0077B6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clipboard-check mb-3 mx-auto"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v1h8V3a1 1 0 0 0-1-1z"/><path d="m9 14 2 2 4-4"/></svg>
+                            <h2 className="text-2xl font-bold text-black">Contratação Quase Completa!</h2>
+                            <p className="text-sm text-gray-500 mt-1">Sua Ordem de Serviço foi gerada. Falta apenas 1 passo.</p>
+                        </div>
+
+                        <div className="space-y-3 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500 mb-6">
+                            <p className="font-semibold text-blue-800">Próximos Passos Obrigatórios:</p>
+                            <ul className="text-sm text-blue-700 space-y-2">
+                                <li className="flex items-center space-x-2">
+                                    <span className="font-extrabold text-lg">1.</span>
+                                    <span>Realize o pagamento de <span className="font-bold">R$ {precoFinal}</span> via Pix (CNPJ: {formattedCNPJ}).</span>
+                                </li>
+                                <li className="flex items-center space-x-2">
+                                    <span className="font-extrabold text-lg">2.</span>
+                                    <span>Clique no botão abaixo e <span className="font-bold underline">ENVIE O COMPROVANTE</span> na conversa do WhatsApp.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        {/* BOTÃO QUE CHAMA O MODAL DE PARABÉNS */}
+                        <button
+                            onClick={onProceedToCongrats} 
+                            className="btn-finalize w-full py-3 px-6 text-lg font-bold text-white rounded-full shadow-lg shadow-blue-500/50 uppercase tracking-wider flex items-center justify-center space-x-2 text-center"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-whatsapp text-white"><path d="M12.9 5.3a8.9 8.9 0 0 0-7.8 15.3l-.2 1.4 1.4-.2A8.9 8.9 0 0 0 12.9 5.3zm-5.7 1.5a7.3 7.3 0 0 1 12.4 5.3c0 1.2-.4 2.3-1.1 3.2L16 17.5l-2.7-.7a.9.9 0 0 0-.8.1l-2.4 2.4a.9.9 0 0 1-.6.2 1.9 1.9 0 0 1-1.3-.5l-1.4-1.4a.9.9 0 0 1-.2-.6 1.9 1.9 0 0 1 .5-1.3l2.4-2.4a.9.9 0 0 0 .1-.8l-.7-2.7 1.2-1.2z"/></svg>
+                            <span>IR PARA O WHATSAPP (Enviar Comprovante)</span>
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="mt-4 w-full text-sm text-gray-500 hover:text-black transition-colors"
+                        >
+                            Fechar e Pagar o Pix Agora
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
 
         // --- TELAS (PASSOS) ---
 
+        let screenContent;
+
         // PASSO 0: Início
         if (passo === 0) {
-            return (
-                <>
-                    <div className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-black">
-                         <div className="text-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zap inline-block text-black mb-3"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            screenContent = (
+                <div className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-black">
+                         
+                        {/* 1. RAIO ACIMA DE FRONT! */}
+                        <div className="text-center mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zap inline-block text-black mb-1 transform -translate-y-1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <h1 className="font-extrabold text-black text-5xl md:text-6xl tracking-tight">FRONT!</h1>
                         </div>
-                        
-                        <Header
-                            titulo="FRONT!"
-                            subtitulo="Somos uma empresa de Manutenção e Conservação de calçadas em Bauru/SP."
-                            passoAtual={null}
-                            totalPassos={3}
-                            isHome={true}
-                        />
+
+                        {/* 2. TRÊS CASAS LADO A LADO */}
+                        <div className="flex justify-center space-x-4 mb-6">
+                            {/* Simple House SVG */}
+                            {[1, 2, 3].map(i => (
+                                <svg key={i} xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#6EE7B7" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-home-icon"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            ))}
+                        </div>
+
+                        {/* Subtítulo Principal */}
+                        <p className="text-center font-medium text-lg text-gray-700 mb-1">
+                            Somos uma empresa de Manutenção e Conservação de calçadas em Bauru/SP.
+                        </p>
+                        <p className="text-xs text-gray-700 mb-6">
+                            Uma empresa Hocc, Siga o canal <a href={YOUTUBE_HOC_URL} target="_blank" rel="noopener noreferrer" className="text-black font-semibold hover:underline">1 ao 1</a>. No youtube
+                        </p>
+
                         <p className="text-center text-md font-medium text-gray-800 mb-6">
                             Nossa conservação é focada na <span className="text-green-600 font-bold">ação a seco</span> e na <span className="text-green-600 font-bold">segurança</span> da sua calçada.
                         </p>
-
+                        
                         <div className="text-center bg-gray-100 p-3 rounded-lg mb-8 border border-gray-200">
                              <p className="text-xs text-gray-700 font-medium">
                                 Esta empresa faz parte do <span className="text-black font-semibold">Plano Hocc</span> e tem como princípio a capitação e expansão do mesmo.
@@ -284,16 +503,13 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             </button>
                         </div>
                     </div>
-                    <InstagramButton /> 
-                </>
             );
         }
 
         // PASSO 1: Cadastro
-        if (passo === 1) {
-            return (
-                <>
-                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
+        else if (passo === 1) {
+            screenContent = (
+                <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
                         <Header
                             titulo="Contrate a Front!"
                             subtitulo="Passo 1: Cliente Front (Seus Dados)"
@@ -331,14 +547,14 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                                 />
                             </div>
 
-                            {/* Sem Otimização de Localização (Gemini) */}
-
+                            {/* Campo WhatsApp com a máscara aplicada */}
                             <input
                                 type="tel"
                                 name="whatsapp"
-                                placeholder=" WhatsApp (apenas números)"
+                                placeholder=" WhatsApp (Ex: (14) 99999-8888)"
                                 onChange={handleInputChange}
                                 value={formData.whatsapp}
+                                maxLength="15" 
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
                             />
                             <input
@@ -370,19 +586,17 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             </button>
                         </div>
                     </div>
-                </>
             );
         }
 
-        // PASSO 2: Escolha do Plano e Termos
-        if (passo === 2) {
+        // PASSO 2: Escolha do Plano e Termos (Aprimorado)
+        else if (passo === 2) {
             
             const planoDiario1 = (PLANOS.plano1.preco / 30).toFixed(2);
             const planoDiario2 = (PLANOS.plano2.preco / 30).toFixed(2);
 
-            return (
-                <>
-                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-4xl">
+            screenContent = (
+                <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-4xl">
                         <Header
                             titulo="Escolha o Plano"
                             subtitulo="Passo 2: Escolha seu Plano de Conservação e Aceite os Termos"
@@ -390,30 +604,37 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             totalPassos={3}
                         />
 
-                        {/* SELEÇÃO DE PLANOS */}
+                        {/* SELEÇÃO DE PLANOS (Visual Aprimorado) */}
                         <div className="grid md:grid-cols-2 gap-6 mb-8">
                             {Object.values(PLANOS).map((plano, index) => (
                                 <div
                                     key={index}
-                                    className={`p-6 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
+                                    className={`p-6 border-2 rounded-xl transition-all duration-300 cursor-pointer relative ${ 
                                         plano.nome === planoSelecionado
-                                            ? 'border-black shadow-lg bg-gray-50'
-                                            : 'border-gray-300 hover:border-gray-500'
+                                            ? 'border-black shadow-lg bg-gray-50 transform scale-[1.02]'
+                                            : 'border-gray-300 hover:border-gray-500 hover:shadow-md'
                                     }`}
                                     onClick={() => setPlanoSelecionado(plano.nome)}
                                 >
+                                    {/* SELO DE MAIS POPULAR */}
+                                    {plano.nome === PLANOS.plano2.nome && (
+                                        <span className="absolute top-0 right-0 bg-black text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl shadow-md">
+                                            MAIS POPULAR
+                                        </span>
+                                    )}
+
                                     <h3 className="text-xl font-bold mb-1 text-black">{plano.nome}</h3>
                                     <p className="text-3xl font-extrabold text-black mb-1">
                                         R$ {plano.preco.toFixed(2)}
-                                        <span className="text-sm font-normal text-gray-500"> / Ao Mês</span>
+                                        <span className="text-sm font-normal text-gray-500"> / Mês</span>
                                     </p>
                                     
-                                    {/* CUSTO DIÁRIO */}
-                                    <p className="text-sm font-semibold text-green-600 mb-2">
-                                        Apenas R$ {plano.nome === PLANOS.plano1.nome ? planoDiario1 : planoDiario2} por dia!
+                                    {/* CUSTO DIÁRIO EM DESTAQUE */}
+                                    <p className="text-sm font-semibold text-green-600 mb-2 p-1 bg-green-50 inline-block rounded-full px-2">
+                                        R$ {plano.nome === PLANOS.plano1.nome ? planoDiario1 : planoDiario2} por dia!
                                     </p>
 
-                                    <p className="text-xs text-gray-600 font-semibold mb-4">{plano.limpezas}</p>
+                                    <p className="text-xs text-gray-600 font-semibold mb-4 border-b pb-2">{plano.limpezas}</p>
 
                                     {/* DETALHES ESTILIZADOS */}
                                     <div className="space-y-2 text-sm">
@@ -506,21 +727,15 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             </div>
                         )}
                     </div>
-                </>
             );
         }
 
         // PASSO 3: Pagamento Pix (Confirmação)
-        if (passo === 3) {
+        else if (passo === 3) {
             const handleCopyPix = () => {
                 // Função para copiar a chave Pix (CNPJ) para a área de transferência
                 navigator.clipboard.writeText(PIX_CNPJ).then(() => {
-                    // Mensagem para o usuário
-                    const messageBox = document.createElement('div');
-                    messageBox.innerHTML = '✅ Chave Pix CNPJ copiada com sucesso!';
-                    messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #d1e7dd; border: 1px solid #badbcc; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold; color: #0f5132;';
-                    document.body.appendChild(messageBox);
-                    setTimeout(() => document.body.removeChild(messageBox), 3000);
+                    handleShowToast('✅ Chave Pix CNPJ copiada com sucesso!', 'success');
                 }, () => {
                     // Fallback para ambientes restritos
                     const tempInput = document.createElement('textarea');
@@ -530,17 +745,15 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                     document.execCommand('copy');
                     document.body.removeChild(tempInput);
                     
-                    const messageBox = document.createElement('div');
-                    messageBox.innerHTML = '✅ Chave Pix CNPJ copiada com sucesso (Fallback)!';
-                    messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #d1e7dd; border: 1px solid #badbcc; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold; color: #0f5132;';
-                    document.body.appendChild(messageBox);
-                    setTimeout(() => document.body.removeChild(messageBox), 3000);
+                    handleShowToast('✅ Chave Pix CNPJ copiada com sucesso (Fallback)!', 'success');
                 });
             };
+            
+            // Formatando o CNPJ para exibição
+            const formattedCNPJ = PIX_CNPJ.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
 
-            return (
-                <>
-                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
+            screenContent = (
+                <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
                         <Header
                             titulo="Confirmação e Pagamento"
                             subtitulo="Passo 3: Finalize a Contratação via Pix"
@@ -590,44 +803,46 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             </div>
                         </div>
 
-                        {/* INSTRUÇÕES DE PAGAMENTO */}
+                        {/* INSTRUÇÕES DE PAGAMENTO (QR CODE REMOVIDO) */}
                         <div className="mb-6 space-y-4">
                             <p className="text-center font-bold text-black text-lg">
-                                Chave Pix CNPJ:
+                                Realize o Pagamento via Pix:
                             </p>
-                            <div className="flex justify-center">
+                            
+                            <p className="text-center text-xs text-gray-600 font-medium">
+                                🔑 Utilize a chave CNPJ abaixo para pagar <span className="font-bold">R$ {precoFinal}</span> no seu app bancário.
+                            </p>
+
+                            <div className="bg-gray-100 p-3 rounded-lg text-center border border-gray-200">
+                                <p className="text-sm font-semibold text-black mb-2">Chave Pix CNPJ (Copia e Cola):</p>
+                                <p className="text-xs text-blue-600 font-medium mb-1">{PIX_BANCO_INFO}</p>
+                                <p className="text-sm text-gray-700 font-mono break-all">{formattedCNPJ}</p>
                                 <button
                                     onClick={handleCopyPix}
-                                    className="bg-black text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition duration-300"
+                                    className="mt-3 bg-black text-white font-medium text-sm py-2 px-4 rounded-lg shadow-md hover:bg-gray-800 transition duration-300"
                                 >
-                                    Copiar Chave Pix CNPJ Banco Inter
+                                    Copiar CNPJ
                                 </button>
                             </div>
-                            <p className="text-center text-xs text-gray-600">
-                                🔑 O valor é de R$ {precoFinal} e deve ser pago via Pix para o CNPJ acima.
-                            </p>
-                            <div className="bg-gray-100 p-3 rounded-lg text-center">
-                                <p className="text-xs text-gray-700 font-semibold">
+
+                            <div className="bg-green-100 p-3 rounded-lg text-center mt-4">
+                                <p className="text-xs text-green-700 font-semibold">
                                     GARANTIA FRONT: Serviço liberado em até 5 dias após a contratação ou devolvemos 100% do seu dinheiro.
                                 </p>
                             </div>
                         </div>
                         
-                        {/* BOTÃO DE FINALIZAÇÃO (WHATSAPP) - NOVO ESTILO E CORRIGIDO COM <a> */}
+                        {/* BOTÃO DE CONFIRMAÇÃO (ACESSA O MODAL) */}
                         <div className="flex flex-col items-center space-y-3">
-                            {/* Uso de <a> garante o redirecionamento em ambientes restritos */}
-                            <a
-                                href={whatsappUrl} // URL completa do WhatsApp com mensagem
-                                target="_blank" // Abre em uma nova aba para não perder a página atual
-                                rel="noopener noreferrer"
+                            <button
+                                onClick={() => setShowOrderSummary(true)} // Mostra o Modal de Resumo do Pedido
                                 className="btn-finalize w-full py-4 px-6 text-lg font-bold text-white rounded-full shadow-lg shadow-blue-500/50 uppercase tracking-wider flex items-center justify-center space-x-2 text-center"
                             >
-                                {/* Ícone do WhatsApp (mantendo a cor branca para contraste) */}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-whatsapp text-white"><path d="M12.9 5.3a8.9 8.9 0 0 0-7.8 15.3l-.2 1.4 1.4-.2A8.9 8.9 0 0 0 12.9 5.3zm-5.7 1.5a7.3 7.3 0 0 1 12.4 5.3c0 1.2-.4 2.3-1.1 3.2L16 17.5l-2.7-.7a.9.9 0 0 0-.8.1l-2.4 2.4a.9.9 0 0 1-.6.2 1.9 1.9 0 0 1-1.3-.5l-1.4-1.4a.9.9 0 0 1-.2-.6 1.9 1.9 0 0 1 .5-1.3l2.4-2.4a.9.9 0 0 0 .1-.8l-.7-2.7 1.2-1.2z"/></svg>
-                                <span>FINALIZAR CONTRATAÇÃO (ENVIAR COMPROVANTE)</span>
-                            </a>
-                            <p className="text-xs text-red-500 font-medium">
-                                CLIQUE ACIMA: Você será redirecionado para o WhatsApp com os dados do pedido prontos para agendamento!
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-package-check text-white"><path d="m16.5 9.4 1.34 1.34L22 4"/><path d="m8 10 2.5 2.5L14 7"/><path d="M7 14h6"/><path d="M10 22H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8.5"/></svg>
+                                <span>FINALIZAR CONTRATAÇÃO</span>
+                            </button>
+                            <p className="text-xs text-red-500 font-medium text-center">
+                                *O envio do comprovante Pix pelo WhatsApp é obrigatório para o agendamento.*
                             </p>
                         </div>
 
@@ -640,15 +855,13 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             </button>
                         </div>
                     </div>
-                </>
             );
         }
 
         // PASSO 4: Recusa dos Termos (Saída)
-        if (passo === 4) {
-             return (
-                <>
-                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg text-center">
+        else if (passo === 4) {
+             screenContent = (
+                <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg text-center">
                         <Header
                             titulo="Entendemos Sua Decisão"
                             subtitulo="Acompanhe Nosso Conteúdo!"
@@ -687,11 +900,48 @@ _Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao
                             </button>
                         </div>
                     </div>
-                </>
             );
+        } else {
+            screenContent = null;
         }
 
-        return null; // Caso de erro ou passo inválido
+        // HANDLER para transicionar do modal de resumo para o modal de parabéns
+        const handleProceedToCongrats = () => {
+            setShowOrderSummary(false);
+            setShowFinanciadorCongrats(true);
+        }
+
+        return (
+            <>
+                {/* Renderiza SocialButtons APENAS se estiver no Passo 0 */}
+                {passo === 0 && <SocialButtons />} 
+
+                {/* O container principal garante o layout centralizado */}
+                <div className="w-full max-w-4xl relative">
+                    <ScreenWrapper passoAtual={passo}>
+                        {screenContent}
+                    </ScreenWrapper>
+                </div>
+                
+                {/* 1. Modal de Resumo do Pedido (Ordem 1) */}
+                {showOrderSummary && (
+                    <OrderSummaryModal
+                        onClose={() => setShowOrderSummary(false)}
+                        onProceedToCongrats={handleProceedToCongrats}
+                        nomeCliente={formData.nome}
+                    />
+                )}
+                
+                {/* 2. Modal de Parabéns Financiador (Ordem 2) */}
+                {showFinanciadorCongrats && (
+                    <FinanciadorCongratsModal
+                        nome={formData.nome}
+                        onClose={() => setShowFinanciadorCongrats(false)}
+                        whatsappUrl={whatsappUrl}
+                    />
+                )}
+            </>
+        );
     };
 
     // Renderiza o App no elemento com ID 'app'
