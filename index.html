@@ -185,36 +185,36 @@
             const valorFinalText = `R$ ${precoFinal}`;
             const dateContratacao = new Date().toLocaleDateString('pt-BR'); // Data atual para formalidade
             
-            // CONTEÚDO DA MENSAGEM NOVO: Personalizado com o nome do cliente e instrução de pagamento
+            // CONTEÚDO DA MENSAGEM NOVO: Emojis literais para garantir a codificação
             const mensagem = `
 *🌟 CONTRATAÇÃO FRONT! - PRÓXIMO PASSO*
 Olá, ${formData.nome}! Recebemos seu cadastro com sucesso. 
 Para desbloquear o serviço e agendarmos a primeira conservação, por favor, realize o pagamento via Pix do valor total e *envie o comprovante nesta conversa*.
 
 *👤 DADOS DO CLIENTE E LOCALIZAÇÃO*
-* \u270d\ufe0f Nome: ${formData.nome}
-* \ud83d\udccd Endereço: ${formData.endereco}
-* \ud83d\udea9 Ponto de Ref.: ${formData.pontoRef}
-* \ud83d\udcde WhatsApp: ${formData.whatsapp}
-* \u2709\ufe0f E-mail: ${formData.email}
+* ✍️ Nome: ${formData.nome}
+* 📍 Endereço: ${formData.endereco}
+* 🚩 Ponto de Ref.: ${formData.pontoRef}
+* 📞 WhatsApp: ${formData.whatsapp}
+* 📧 E-mail: ${formData.email}
 
 *💸 DETALHES FINANCEIROS*
-* \u2b50\ufe0f Plano Escolhido: ${planoEscolhido}
-* \ud83d\udcc5 Custo Diário: R$ ${precoDiario}
-* \ud83d\udcb0 Valor Original: ${valorBaseText}
-* \ud83c\udf81 Desconto de 8% Aplicado: ${descontoText}
-* \u2728 TOTAL A PAGAR (PIX): ${valorFinalText}
-* \ud83d\udcc6 Data da Contratação: ${dateContratacao}
+* ⭐ Plano Escolhido: ${planoEscolhido}
+* 🗓️ Custo Diário: R$ ${precoDiario}
+* 💵 Valor Original: ${valorBaseText}
+* 🎁 Desconto de 8% Aplicado: ${descontoText}
+* ✨ TOTAL A PAGAR (PIX): ${valorFinalText}
+* 📅 Data da Contratação: ${dateContratacao}
 
 *✅ TERMOS*
-* \ud83c\udfa5 Termo de Gravação para Conteúdo (Hocc): ACEITO
-* \ud83d\udcc3 Comprovante Pix: (A ser anexado pelo cliente)
+* 🎬 Termo de Gravação para Conteúdo (Hocc): ACEITO
+* 📄 Comprovante Pix: (A ser anexado pelo cliente)
 
 _Aguardamos o comprovante para entrarmos em contato em breve. Agradecemos a confiança!_
 
 *Nossas Mídias:*
-\u2022 Instagram: ${INSTAGRAM_URL}
-\u2022 YouTube: ${YOUTUBE_HOC_URL}
+• Instagram: ${INSTAGRAM_URL}
+• YouTube: ${YOUTUBE_HOC_URL}
             `.trim();
 
             return encodeURIComponent(mensagem);
