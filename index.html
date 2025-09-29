@@ -3,676 +3,699 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Front! - Contratação de Limpeza</title>
-    <!-- Carregamento do Tailwind CSS via CDN -->
+    <title>Front! - Contratação de Serviços</title>
+    <!-- Carrega Tailwind CSS via CDN para estilização -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuração básica do Tailwind (Fonte Inter) -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
     <style>
-        /* Estilo básico para garantir que o corpo ocupe a tela e use a fonte Inter */
+        /* Definindo a fonte Inter, amplamente usada para interfaces modernas */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3ff6; /* bg-gray-100 */
-            min-height: 100vh;
         }
-        /* Garantir que o container principal esteja centralizado e responsivo */
-        #root {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Alinha ao topo */
-            padding: 20px;
+        /* Estilos customizados para o botão Instagram e o ticket */
+        .instagram-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 1.5rem;
+            z-index: 50;
         }
-        /* Estilo customizado para o ticket tracejado */
-        .ticket-resumo {
-          border: 3px dashed #1f2937; /* Cinza escuro/slate */
-          border-radius: 12px;
-          background-color: #f9fafb; /* bg-gray-50 */
-          position: relative; 
+        .ticket-dashed-border {
+            border: 2px dashed #334155; /* Cor slate-700 */
+            border-radius: 0.5rem;
         }
-        /* Cantos laterais para simular o corte de ingresso/ticket */
-        .ticket-resumo::before,
-        .ticket-resumo::after {
-          content: '';
-          position: absolute;
-          width: 20px;
-          height: 20px;
-          background-color: white; /* Cor de fundo da área principal */
-          border-radius: 50%;
-          z-index: 10;
+        /* Estilo para a animação do botão principal da Home */
+        .cta-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .ticket-resumo::before {
-          top: 50%;
-          left: -10px; 
-          transform: translateY(-50%);
-          border: 3px dashed #1f2937;
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
         }
-        .ticket-resumo::after {
-          top: 50%;
-          right: -10px;
-          transform: translateY(-50%);
-          border: 3px dashed #1f2937;
+
+        /* NOVO ESTILO PARA O BOTÃO FINALIZAR (PASSO 3) */
+        .btn-finalize {
+            transition: all 0.3s ease-in-out;
+            /* Gradiente de azul para chamar atenção, similar ao branding do Plano Hocc */
+            background-image: linear-gradient(to right, #0077B6 0%, #00B4D8 100%);
         }
-        /* Ajuste para o botão flutuante no canto */
-        @media (max-width: 640px) {
-            .instagram-float {
-                bottom: 15px;
-                right: 15px;
-                padding: 12px;
-            }
+        .btn-finalize:hover {
+            background-image: linear-gradient(to right, #00B4D8 0%, #0077B6 100%); /* Inverte o gradiente */
+            transform: scale(1.02); 
+            box-shadow: 0 10px 20px rgba(0, 119, 182, 0.5); /* Sombra mais proeminente */
         }
     </style>
-    <!-- Carregamento do React, ReactDOM e Babel -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Carrega React, ReactDOM e Babel para rodar o JSX no navegador -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
-    <div id="root" class="w-full">
-        <!-- O aplicativo React será renderizado aqui -->
-    </div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-    <script type="text/babel">
-        // Importando React Hooks
-        const { useState, useMemo } = React;
+<div id="app"></div>
 
-        // --- CONFIGURAÇÕES GLOBAIS ---
-        const PLANOS = {
-          plano1: { 
-            nome: 'Manutenção Essencial', 
-            preco: 24.90, 
-            limite: 'Acesso a 2 limpezas ao mês', 
-            servicos: 'Ideal para manutenção regular (semanal/quinzenal) em áreas com pouca vegetação.',
+<script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // --- CONSTANTES ---
+    const INSTAGRAM_URL = "https://instagram.com/Front.ep1";
+    const YOUTUBE_HOC_URL = "https://www.youtube.com/@1ao1-hocc";
+    const INSTAGRAM_ARTHUR_URL = "https://instagram.com/Arthurhocc";
+    const WHATSAPP_NUMERO = "14981150675"; 
+    const PIX_CNPJ = "33948580000160"; 
+    const DESCONTO_PERCENTUAL = 0.08; // Desconto de 8%
+
+    const PLANOS = {
+        plano1: {
+            nome: "Conservação Essencial",
+            preco: 24.90,
+            limpezas: "até 2 conservações ao mês",
             detalhes: [
-              { servico: 'Varrição e Coleta de Lixo', descricao: 'Coleta de folhas, galhos, lixo leve e poeira superficial.' },
-              { servico: 'Poda Leve de Matos', descricao: 'Remoção manual ou com tesoura de pequenos matos e ervas nas fendas (limpeza visual).' },
-              { servico: 'Escovação Essencial', descricao: 'Escovação manual leve para soltar a sujeira superficial.' },
-              { servico: 'Escadas e Meio-fio', descricao: 'Limpeza superficial de até 5 degraus e do meio-fio adjacente.' },
+                "Varrição e Coleta de Lixo",
+                "Poda Leve de Matos e ervas daninhas",
+                "Escovação manual leve para sujeira superficial",
+                "Conservação superficial de até 5 degraus e meio-fio adjacente"
             ],
-            foco: 'Manutenção e aparência básica. Não inclui a remoção de musgo incrustado ou lodo.'
-          },
-          plano2: { 
-            nome: 'Limpeza Completa "Max"', 
-            preco: 29.90, 
-            limite: 'Acesso a até 10 limpezas ao mês', 
-            servicos: 'O melhor custo-benefício para quem precisa de uma limpeza completa, com foco em segurança e restauração visual.',
+            foco: "Manutenção e aparência básica. Não inclui remoção de musgo incrustado ou lodo."
+        },
+        plano2: {
+            nome: "Conservação Completa 'Max'",
+            preco: 29.90,
+            limpezas: "até 10 conservações ao mês",
             detalhes: [
-              { servico: 'Tudo do Plano 1', descricao: 'Incluído varrição e coleta de lixo.' },
-              { servico: 'Raspagem e Desincrustação Profunda', descricao: 'Raspagem de precisão nas fendas para remoção completa de musgos, lodo e mato incrustado (principal causa de calçadas escorregadias).' },
-              { servico: 'Escovação com Ferramenta', descricao: 'Uso de escovas e equipamentos a seco de alta potência para desincrustar sujeira pesada e manchas de terra ou poeira.' },
-              { servico: 'Escadas e Meio-fio Completo', descricao: 'Limpeza de escadas e raspagem completa do meio-fio, removendo vegetação e sujeira acumulada.' },
+                "Tudo do Plano Essencial (Varrição e Coleta)",
+                "Raspagem e Desincrustação Profunda de musgos e lodo",
+                "Escovação com Ferramenta a seco de alta potência",
+                "Conservação completa de escadas e raspagem total do meio-fio"
             ],
-            foco: 'Limpeza profunda e restauração da aparência da calçada, garantindo mais segurança e durabilidade.'
-          },
-        };
-        const CHAVE_PIX_CNPJ = '60.676.425/0001-47';
+            foco: "Conservação profunda e restauração da aparência, garantindo mais segurança e durabilidade."
+        }
+    };
 
-        // NÚMERO DE WHATSAPP CORRETO (5514981150675 - DDI + DDD + NÚMERO)
-        const WHATSAPP_NUMERO_COMPLETO = '5514981150675'; 
+    // --- COMPONENTES REUTILIZÁVEIS ---
 
-        // NOVO HANDLE DO INSTAGRAM SOLICITADO PELO CLIENTE
-        const INSTAGRAM_FRONT_URL = 'https://instagram.com/Front.ep1'; 
-        // CORREÇÃO DA URL DO YOUTUBE
-        const YOUTUBE_HOC_URL = 'https://www.youtube.com/@1ao1-hocc';
-        const DESCONTO_PERCENTUAL = 0.05; // 5%
+    // 1. Botão Flutuante do Instagram
+    const InstagramButton = () => (
+        <a 
+            href={INSTAGRAM_URL} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="instagram-btn bg-black text-white hover:bg-gray-800 transition-colors duration-300 shadow-xl rounded-full p-4 flex items-center justify-center space-x-2"
+        >
+            {/* Ícone simples do Instagram (SVG) */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.5" y1="6.5" y2="6.5"/></svg>
+        </a>
+    );
 
-        // --- COMPONENTE DO BOTÃO FLUTUANTE DO INSTAGRAM ---
-        const InstagramButton = () => (
-            <a 
-                href={INSTAGRAM_FRONT_URL} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="instagram-float fixed bottom-6 right-6 bg-pink-600 hover:bg-pink-700 text-white p-4 rounded-full shadow-2xl transition duration-300 z-50 transform hover:scale-105"
-                title="Instagram da Front! (@Front.ep1)"
-            >
-                {/* Ícone do Instagram (Inline SVG) */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
-            </a>
-        );
-        // --- FIM COMPONENTE BOTÃO FLUTUANTE ---
-        
-        // --- NOVO SUBTÍTULO HOC C/ LINK ---
-        const HoccSubtitle = () => (
-            <p className="text-sm text-gray-500 text-center mb-4">
-                Uma empresa Hocc. Siga o canal 
-                <a href={YOUTUBE_HOC_URL} target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-800 font-bold underline ml-1 mr-1">
-                    1 ao 1 Hocc
-                </a>
-                no youtube.
+    // 2. Componente de Cabeçalho
+    const Header = ({ titulo, subtitulo, passoAtual, totalPassos, isHome = false }) => (
+        <div className="text-center mb-6">
+            <div className="flex justify-center items-center space-x-2 mb-2">
+                <h1 className={`font-extrabold text-black ${isHome ? 'text-5xl md:text-6xl tracking-tight' : 'text-3xl'}`}>{titulo}</h1>
+            </div>
+            <p className={`font-medium ${isHome ? 'text-lg text-gray-700' : 'text-sm text-gray-500'} mb-1`}>
+                {subtitulo}
             </p>
-        );
-        // --- FIM SUBTÍTULO HOC ---
+             <p className="text-xs text-gray-700">
+                Uma empresa Hocc, Siga o canal <a href={YOUTUBE_HOC_URL} target="_blank" rel="noopener noreferrer" className="text-black font-semibold hover:underline">1 ao 1</a>. No youtube
+            </p>
+            {passoAtual !== null && (
+                <p className="text-xs mt-3 text-gray-400">
+                    PASSO {passoAtual} de {totalPassos}
+                </p>
+            )}
+        </div>
+    );
 
+    // --- LÓGICA PRINCIPAL DO APP ---
 
-        // --- COMPONENTE PRINCIPAL ---
-        function ContratacaoFront() {
-          // 0: Início, 1: Cadastro, 2: Escolha, 3: Pagamento, 4: Saída (Recusa)
-          const [passo, setPasso] = useState(0);
-          const [planoSelecionado, setPlanoSelecionado] = useState(null);
-          const [querDesconto, setQuerDesconto] = useState(false);
-          const [termosAceitos, setTermosAceitos] = useState(false);
-          const [copyStatus, setCopyStatus] = useState(''); // Status da cópia Pix
-          const [dadosCliente, setDadosCliente] = useState({
+    const App = () => {
+        const [passo, setPasso] = useState(0); // 0: Início, 1: Cadastro, 2: Plano, 3: Pagamento, 4: Recusa
+        const [descontoAtivo, setDescontoAtivo] = useState(false);
+        const [termoAceito, setTermoAceito] = useState(false);
+        const [isLoading, setIsLoading] = useState(false); // Mantido por segurança, mas não usado sem Gemini
+
+        const [formData, setFormData] = useState({
             nome: '',
             endereco: '',
-            // NOVO CAMPO: Ponto de Referência
-            pontoReferencia: '', 
+            pontoRef: '', // Campo obrigatório
             whatsapp: '',
-            email: '' 
-          });
+            email: ''
+        });
+        const [planoSelecionado, setPlanoSelecionado] = useState(PLANOS.plano1.nome);
 
-          // Calcula o valor final e o valor do desconto
-          const { valorFinal, valorDesconto } = useMemo(() => {
-            if (!planoSelecionado) return { valorFinal: 0, valorDesconto: 0 };
-            
-            let precoOriginal = PLANOS[planoSelecionado].preco;
-            let desconto = 0;
-            let final = precoOriginal;
+        // Calcula o preço final, desconto e valor diário
+        const { precoBase, precoFinal, valorDesconto, precoDiario, planoEscolhido } = useMemo(() => {
+            const plano = planoSelecionado === PLANOS.plano1.nome ? PLANOS.plano1 : PLANOS.plano2;
+            const desconto = descontoAtivo ? DESCONTO_PERCENTUAL : 0; 
+            const precoBase = plano.preco;
+            const valorDesconto = precoBase * desconto;
+            const precoFinal = precoBase - valorDesconto;
+            const precoDiario = precoFinal / 30; 
 
-            if (querDesconto) {
-              desconto = precoOriginal * DESCONTO_PERCENTUAL;
-              final = precoOriginal - desconto;
-            }
-
-            return { 
-              valorFinal: final.toFixed(2), 
-              valorDesconto: desconto.toFixed(2)
+            return {
+                precoBase,
+                precoFinal: precoFinal.toFixed(2),
+                valorDesconto: valorDesconto.toFixed(2),
+                precoDiario: precoDiario.toFixed(2),
+                planoEscolhido: plano.nome
             };
-          }, [planoSelecionado, querDesconto]);
-          
-          // Validação mínima do cadastro (inclui Ponto de Referência)
-          const isCadastroValid = useMemo(() => {
-            const { nome, endereco, whatsapp, email, pontoReferencia } = dadosCliente;
-            // Regex simples para validar se o email tem um formato básico (algo@algo.algo)
-            const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }, [planoSelecionado, descontoAtivo]);
 
+
+        // --- VALIDAÇÕES ---
+
+        const isCadastroValid = useMemo(() => {
+            // Verifica se todos os campos obrigatórios estão preenchidos
             return (
-              nome.trim() !== '' && 
-              endereco.trim() !== '' && 
-              pontoReferencia.trim() !== '' && // VERIFICAÇÃO DO NOVO CAMPO
-              whatsapp.length >= 10 &&
-              isEmailValid
+                formData.nome.trim() !== '' &&
+                formData.endereco.trim() !== '' &&
+                formData.pontoRef.trim() !== '' &&
+                formData.whatsapp.trim().length >= 8 && 
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()) // Validação básica de email
             );
-          }, [dadosCliente]);
+        }, [formData]);
 
-          // Mensagem do WhatsApp com todos os dados
-          const whatsappMessage = useMemo(() => {
-            const { nome, endereco, whatsapp, email, pontoReferencia } = dadosCliente; 
-            const plano = PLANOS[planoSelecionado]?.nome || 'Plano Não Selecionado';
+        // Mensagem final para o WhatsApp com os emojis e formatação pedida
+        const whatsappMessage = useMemo(() => {
+            const descontoText = descontoAtivo 
+                ? `SIM (Economia de R$ ${valorDesconto})` 
+                : `NÃO`;
             
-            let msg = `🚀 CONFIRMAÇÃO DE SERVIÇO - FRONT! 🚀\n\n`;
+            const valorBaseText = `R$ ${precoBase.toFixed(2)}`;
+            const valorFinalText = `R$ ${precoFinal}`;
+            const dateContratacao = new Date().toLocaleDateString('pt-BR'); // Data atual para formalidade
             
-            msg += `Olá, gostaria de confirmar o serviço! Acabei de fazer o Pix de *R$ ${valorFinal}* para o Plano *${plano}*.\n\n`;
-            
-            // Dados do Cliente
-            msg += `📝 *DADOS DO CLIENTE E ENDEREÇO*\n`;
-            msg += `* 👤 Nome: ${nome}\n`;
-            msg += `* 📍 Endereço: ${endereco}\n`;
-            msg += `* 💡 Ponto de Ref.: ${pontoReferencia}\n`; // PONTO DE REFERÊNCIA INCLUÍDO
-            msg += `* 📱 WhatsApp: ${whatsapp}\n`;
-            msg += `* 📧 E-mail: ${email}\n\n`;
-            
-            // Detalhes da Contratação
-            msg += `✅ *DETALHES DA CONTRATAÇÃO*\n`;
-            msg += `* 🏷️ Plano Escolhido: ${plano}\n`;
-            msg += `* 💰 Valor Pago (Pix): R$ ${valorFinal}\n`;
-            msg += `* 💸 Desconto Economizado: R$ ${valorDesconto}\n`; 
-            msg += `* ♻️ Desconto 5% (Sacos): ${querDesconto ? 'SIM' : 'NÃO'}\n`;
-            msg += `* 📹 Termo de Gravação: ACEITO\n\n`;
-            
-            // Próximos Passos
-            msg += `✨ *PRÓXIMOS PASSOS*\n`;
-            msg += `* Por favor, agendar o serviço. O comprovante está em anexo!`;
+            // CONTEÚDO DA MENSAGEM NOVO: Personalizado com o nome do cliente e instrução de pagamento
+            const mensagem = `
+*🌟 CONTRATAÇÃO FRONT! - PRÓXIMO PASSO*
+Olá, ${formData.nome}! Recebemos seu cadastro com sucesso. 
+Para desbloquear o serviço e agendarmos a primeira conservação, por favor, realize o pagamento via Pix do valor total e *envie o comprovante nesta conversa*.
 
-            return encodeURIComponent(msg); 
-          }, [dadosCliente, planoSelecionado, valorFinal, valorDesconto, querDesconto]);
+*👤 DADOS DO CLIENTE E LOCALIZAÇÃO*
+* \u270d\ufe0f Nome: ${formData.nome}
+* \ud83d\udccd Endereço: ${formData.endereco}
+* \ud83d\udea9 Ponto de Ref.: ${formData.pontoRef}
+* \ud83d\udcde WhatsApp: ${formData.whatsapp}
+* \u2709\ufe0f E-mail: ${formData.email}
 
-          const handleInputChange = (e) => {
+*💸 DETALHES FINANCEIROS*
+* \u2b50\ufe0f Plano Escolhido: ${planoEscolhido}
+* \ud83d\udcc5 Custo Diário: R$ ${precoDiario}
+* \ud83d\udcb0 Valor Original: ${valorBaseText}
+* \ud83c\udf81 Desconto de 8% Aplicado: ${descontoText}
+* \u2728 TOTAL A PAGAR (PIX): ${valorFinalText}
+* \ud83d\udcc6 Data da Contratação: ${dateContratacao}
+
+*✅ TERMOS*
+* \ud83c\udfa5 Termo de Gravação para Conteúdo (Hocc): ACEITO
+* \ud83d\udcc3 Comprovante Pix: (A ser anexado pelo cliente)
+
+_Aguardamos o comprovante para entrarmos em contato em breve. Agradecemos a confiança!_
+
+*Nossas Mídias:*
+\u2022 Instagram: ${INSTAGRAM_URL}
+\u2022 YouTube: ${YOUTUBE_HOC_URL}
+            `.trim();
+
+            return encodeURIComponent(mensagem);
+        }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase, precoDiario]);
+
+        // Criando a URL final do WhatsApp aqui
+        const whatsappUrl = useMemo(() => {
+             return `https://wa.me/55${WHATSAPP_NUMERO}?text=${whatsappMessage}`;
+        }, [whatsappMessage]);
+
+        // --- HANDLERS DE NAVEGAÇÃO ---
+
+        const handleInputChange = (e) => {
             const { name, value } = e.target;
-            setDadosCliente(prev => ({ ...prev, [name]: value }));
-          };
+            setFormData(prev => ({ ...prev, [name]: value }));
+        };
 
-          const handleProximoPassoCadastro = () => {
+        const handleProximoPassoCadastro = () => {
             if (isCadastroValid) {
-              setPasso(2); // Vai para a Escolha do Plano
+                // Avança diretamente para o Passo 2: Escolha do Plano
+                setPasso(2);
             } else {
-              console.error('Por favor, preencha todos os campos obrigatórios (Nome, Endereço, Ponto de Referência, WhatsApp e E-mail válido).');
+                // Mensagem de erro (substituindo o alert)
+                const messageBox = document.createElement('div');
+                messageBox.innerHTML = '⚠️ Por favor, preencha todos os campos obrigatórios corretamente para avançar.';
+                messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fefcbf; border: 1px solid #fbd38d; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold;';
+                document.body.appendChild(messageBox);
+                setTimeout(() => document.body.removeChild(messageBox), 3000);
             }
-          };
+        };
 
-          const handleRecusaTermos = () => {
-            setPasso(4); // Manda para a tela de Recusa/Saída
-          };
+        // --- TELAS (PASSOS) ---
 
-          const handleProximoPassoCheckout = () => {
-            if (!planoSelecionado) {
-              console.error('Selecione um plano para continuar.');
-              return;
-            }
-            if (!termosAceitos) {
-              console.error('O Termo de Consentimento para Conteúdo é obrigatório para prosseguir.');
-              return;
-            }
-            setPasso(3); // Manda para a tela de Pagamento
-          };
-
-          const handleCopyPix = () => {
-              // A chave PIX CNPJ é copiada usando um campo temporário (tempInput.value = CHAVE_PIX_CNPJ),
-              // garantindo que o valor correto seja copiado, independentemente do que é exibido na tela.
-              const tempInput = document.createElement('input');
-              tempInput.value = CHAVE_PIX_CNPJ;
-              document.body.appendChild(tempInput);
-              tempInput.select();
-              document.execCommand('copy');
-              document.body.removeChild(tempInput);
-
-              setCopyStatus('Chave copiada!');
-              setTimeout(() => setCopyStatus(''), 2000);
-          };
-          
-          // FUNÇÃO FINALIZAR - AGORA REDIRECIONA PARA O WHATSAPP COM OS DADOS
-          const handleFinalizeContratacao = () => {
-            const whatsappLink = `https://wa.me/${WHATSAPP_NUMERO_COMPLETO}?text=${whatsappMessage}`;
-            window.open(whatsappLink, '_blank'); 
-          };
-
-
-          // SVG de Checkmark
-          const CheckIcon = () => (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 min-w-[18px] mt-1">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-          );
-
-          
-          // --- TELAS (VIEWS) ---
-          
-          // Passo 4: Tela de Recusa
-          if (passo === 4) {
+        // PASSO 0: Início
+        if (passo === 0) {
             return (
-              <> 
-              <div className="max-w-3xl mx-auto p-6 md:p-10 bg-gray-50 shadow-2xl rounded-xl mt-8 border-4 border-slate-700">
-                <h2 className="text-3xl font-bold text-slate-700 text-center mb-4">Obrigado pelo Interesse na Front!</h2>
-                <HoccSubtitle /> 
-                <p className="text-gray-700 mb-4 text-center">Sua privacidade é importante para nós. Entendemos sua decisão.</p>
-                <p className="text-gray-700 mb-6 text-center">
-                  Como a Front! é a empresa-piloto do projeto Hocc 1 ao 1, nosso modelo de preço e serviço depende da gravação POV.
-                </p>
-                <p className="text-lg font-semibold text-center text-gray-800 mb-6">
-                  Infelizmente, não podemos prosseguir com sua contratação nos planos atuais sem a autorização de gravação.
-                </p>
-                <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-                  <a href={YOUTUBE_HOC_URL} target="_blank" rel="noopener noreferrer" className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 shadow-md">
-                    Canal YouTube: Hocc 1 ao 1
-                  </a>
-                  {/* LINK DO INSTAGRAM ATUALIZADO NO PASSO 4 */}
-                  <a href={INSTAGRAM_FRONT_URL} target="_blank" rel="noopener noreferrer" className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-center transition duration-300 shadow-md">
-                    Instagram: @Front.ep1
-                  </a>
-                </div>
-                <button className="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 rounded-lg transition duration-300" onClick={() => setPasso(0)}>
-                    Voltar para o Início
-                </button>
-              </div>
-              <InstagramButton />
-              </>
-            );
-          }
-
-          // Passo 3: Tela de Pagamento
-          if (passo === 3) {
-            
-            return (
-              <> 
-              <div className="max-w-3xl mx-auto p-6 md:p-10 bg-white shadow-2xl rounded-xl mt-8 border-4 border-gray-800">
-                <h2 className="text-3xl font-extrabold text-gray-800 text-center mb-1">Contratação Quase Concluída!</h2>
-                <HoccSubtitle /> 
-                
-                {/* NOVO ESTILO: TICKET DE RESUMO */}
-                <div className="ticket-resumo relative p-6 mb-6">
-                  <h3 className="text-2xl font-semibold mb-4 text-gray-800 text-center border-b pb-2 border-gray-300">
-                    📋 RESUMO DO PEDIDO
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 gap-y-3">
-                      <p className="text-sm font-semibold text-gray-600">CLIENTE:</p>
-                      <p className="text-base font-bold text-slate-700 text-right">{dadosCliente.nome}</p>
-
-                      <p className="text-sm font-semibold text-gray-600">PLANO:</p>
-                      <p className="text-base font-bold text-slate-700 text-right">{PLANOS[planoSelecionado].nome}</p>
-                      
-                      <p className="text-sm font-semibold text-gray-600">DESCONTO 5% (SACOS):</p>
-                      <p className={`text-base font-bold text-right ${querDesconto ? 'text-green-600' : 'text-red-500'}`}>
-                        {querDesconto ? 'APLICADO' : 'NÃO APLICADO'}
-                      </p>
-
-                      {/* VALOR ECONOMIZADO */}
-                      <p className="text-sm font-semibold text-gray-600">VOCÊ ECONOMIZOU:</p>
-                      <p className="text-base font-bold text-green-600 text-right">
-                        R$ {valorDesconto}
-                      </p>
-                  </div>
-                  
-                  <div className="text-center mt-5 pt-4 border-t-2 border-dashed border-gray-400">
-                    <p className="text-base font-extrabold text-gray-900 mb-1">VALOR TOTAL AO MÊS (PIX)</p>
-                    <p className="text-5xl font-extrabold text-slate-800">
-                      R$ {valorFinal}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 p-6 rounded-lg mb-6 border border-slate-300">
-                  <h3 className="text-2xl font-semibold mb-3 text-slate-800">Instruções para Pagamento Ao Mês</h3>
-                  <p className="mb-4">
-                    1. Abra o App do seu Banco e pague o valor exato de R$ {valorFinal}.
-                  </p>
-                  
-                  {/* CHAVE PIX OCULTA, DISPLAY DE INFORMAÇÃO */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0 sm:space-x-3">
-                      <strong className="pix-key bg-white text-gray-900 border border-gray-300 inline-block p-3 rounded-lg font-bold text-lg select-none w-full sm:w-auto overflow-hidden text-clip whitespace-nowrap">
-                        Chave CNPJ do Banco Inter 
-                      </strong>
-                      <button 
-                          onClick={handleCopyPix}
-                          className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md whitespace-nowrap w-full sm:w-auto"
-                      >
-                          {copyStatus || 'Copiar Chave Pix CNPJ Banco Inter'} 
-                      </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg border border-gray-300">
-                  <h3 className="text-2xl font-semibold mb-3 text-gray-800">2. Enviar Comprovante e Finalizar</h3>
-                  
-                  <p className="mb-4 text-base text-gray-700 font-semibold">
-                    Após realizar o Pix, clique abaixo para enviar o comprovante via WhatsApp. 
-                    Todas as informações da sua contratação serão enviadas automaticamente na mensagem.
-                  </p>
-                  
-                  {/* BOTÃO FINAL - REDIRECIONA PARA O WHATSAPP COM DADOS */}
-                  <button
-                    onClick={handleFinalizeContratacao}
-                    className="flex items-center justify-center space-x-2 w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition duration-300 shadow-xl"
-                  >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.35 4.94l-1.4 5.17 5.3-1.38c1.45.8 3.1 1.25 4.66 1.25 5.46 0 9.91-4.45 9.91-9.91s-4.45-9.91-9.91-9.91zm4.79 14.77c-.11.3-.43.5-.78.5s-.67-.2-.97-.47l-1.61-1.39c-.19-.16-.44-.24-.7-.24h-.05c-.26 0-.51.08-.7.24l-1.61 1.39c-.3.27-.62.47-.97.47s-.67-.2-.78-.5l-.83-2.67c-.11-.3-.08-.63.09-.88l1.79-2.22c.18-.23.47-.36.78-.36.31 0 .61.13.78.36l1.79 2.22c.17.25.2.58.09.88l-.83 2.67z"/></svg>
-                    ENVIAR COMPROVANTE E FINALIZAR (WhatsApp)
-                  </button>
-
-
-                  <p className="text-center mt-4 text-sm text-gray-500">
-                    Sua vaga é confirmada após o envio e o serviço será liberado em até 5 dias úteis.
-                  </p>
-                </div>
-                <button className="w-full mt-6 py-2 text-sm text-slate-700 hover:text-slate-900" onClick={() => setPasso(2)}>
-                    &larr; Voltar para a Escolha do Plano
-                </button>
-              </div>
-              <InstagramButton />
-              </>
-            );
-          }
-          
-          // Passo 2: Tela de Escolha do Plano
-          if (passo === 2) {
-            const planoAtual = PLANOS[planoSelecionado];
-            
-            // Valor a ser exibido no botão
-            const valorExibido = planoSelecionado ? valorFinal : (planoAtual?.preco.toFixed(2) || '');
-
-            return (
-              <> 
-              <div className="max-w-3xl mx-auto p-6 md:p-10 bg-gray-50 shadow-2xl rounded-xl mt-8">
-                <h1 className="text-3xl font-extrabold text-slate-700 text-center mb-1">Passo 2: Escolha seu Plano</h1>
-                <HoccSubtitle /> 
-                <p className="text-gray-500 text-center mb-8">Limpeza Sustentável em Bauru/SP. Cliente: {dadosCliente.nome}</p>
-                
-                {/* SELEÇÃO DE PLANOS */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  {Object.keys(PLANOS).map((key) => (
-                    <div
-                      key={key}
-                      className={`p-6 border-2 rounded-lg cursor-pointer transition duration-300 hover:shadow-xl 
-                                  ${planoSelecionado === key ? 'border-gray-800 bg-white shadow-lg' : 'border-gray-300 bg-white hover:border-slate-400'}`}
-                      onClick={() => setPlanoSelecionado(key)}
-                    >
-                      <h3 className="text-xl font-bold text-gray-800">{PLANOS[key].nome}</h3>
-                      <p className="text-4xl font-extrabold text-gray-800 my-2">R$ {PLANOS[key].preco.toFixed(2)}</p>
-                      
-                      {/* DESCRIÇÃO E DETALHES ESTILIZADOS */}
-                      <p className="text-sm text-gray-700 mb-2 font-semibold">{PLANOS[key].limite}</p>
-                      <p className="text-sm text-gray-600 font-semibold mb-2">{PLANOS[key].servicos}</p>
-
-                      <div className="space-y-3 mt-4">
-                        <p className="text-sm font-bold text-slate-700 uppercase tracking-wider border-b border-gray-300 pb-1">Serviços Incluídos:</p>
-                        
-                        <div className="space-y-2">
-                          {PLANOS[key].detalhes.map((item, index) => (
-                            <div key={index} className="flex items-start space-x-3">
-                              <CheckIcon />
-                              <p className="text-sm">
-                                <span className="font-bold text-gray-800">{item.servico}:</span>
-                                <span className="text-gray-600 ml-1">{item.descricao}</span>
-                              </p>
-                            </div>
-                          ))}
+                <>
+                    <div className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border-t-8 border-black">
+                         <div className="text-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zap inline-block text-black mb-3"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                         </div>
                         
-                        {/* Stylized Foco section */}
-                        <div className="mt-4 p-3 bg-slate-100 rounded-lg border-l-4 border-slate-600">
-                          <p className="text-xs font-bold text-slate-800">FOCO PRINCIPAL:</p>
-                          <p className="text-sm text-gray-700">{PLANOS[key].foco}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {planoSelecionado && (
-                  <div className="mt-8 space-y-6">
-                    
-                    {/* DESCONTO */}
-                    <div className="p-4 rounded-lg border border-slate-400 bg-slate-50">
-                      <h4 className="text-lg font-semibold text-slate-700 mb-2">Incentivo Sustentável (5% OFF)</h4> 
-                      <label className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={querDesconto}
-                          onChange={(e) => setQuerDesconto(e.target.checked)}
-                          className="form-checkbox h-5 w-5 text-slate-600 rounded"
+                        <Header
+                            titulo="FRONT!"
+                            subtitulo="Somos uma empresa de Manutenção e Conservação de calçadas em Bauru/SP."
+                            passoAtual={null}
+                            totalPassos={3}
+                            isHome={true}
                         />
-                        <span className="text-gray-700 font-medium">
-                          Quero o desconto de 5%! (Fornecerei o(s) saco(s) de lixo para a coleta) 
-                        </span>
-                      </label>
+                        <p className="text-center text-md font-medium text-gray-800 mb-6">
+                            Nossa conservação é focada na <span className="text-green-600 font-bold">ação a seco</span> e na <span className="text-green-600 font-bold">segurança</span> da sua calçada.
+                        </p>
+
+                        <div className="text-center bg-gray-100 p-3 rounded-lg mb-8 border border-gray-200">
+                             <p className="text-xs text-gray-700 font-medium">
+                                Esta empresa faz parte do <span className="text-black font-semibold">Plano Hocc</span> e tem como princípio a capitação e expansão do mesmo.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <button
+                                onClick={() => setPasso(1)}
+                                className="w-full bg-black text-white font-extrabold text-lg py-4 rounded-xl cta-button hover:bg-gray-700"
+                            >
+                                INICIAR CONTRATAÇÃO
+                            </button>
+                        </div>
                     </div>
-
-                    {/* TERMO DE GRAVAÇÃO ATUALIZADO */}
-                    <div className="p-4 rounded-lg border-2 border-red-500 bg-red-50 shadow-lg">
-                      <h4 className="text-lg font-bold text-red-700 mb-2">Termo de Consentimento para Conteúdo Hocc 1 ao 1 (OBRIGATÓRIO)</h4>
-                      
-                      <p className="text-sm text-red-800 mb-3">
-                        Ao contratar, você concorda que o serviço será gravado em formato POV para o nosso canal no YouTube. Essa gravação é essencial, pois o conteúdo gerado é o que viabiliza e sustenta o preço acessível dos nossos planos.
-                      </p>
-                      
-                      <p className="text-sm text-gray-800 font-semibold mb-3">
-                        Seu Espaço de Divulgação: Você pode usar este espaço gravado (sua calçada) para divulgar seu próprio negócio, produto, serviço ou mídia social durante a gravação. Basta nos avisar antes!
-                      </p>
-
-                      <p className="text-sm text-gray-700 font-semibold mb-4">
-                        Garantia de Privacidade: Comprometemo-nos a NÃO gravar rostos, NÚMEROS DE ENDEREÇO, placas de veículos, ou quaisquer outros pontos de referência que possam identificar sua residência ou sua pessoa. O foco é 100% na limpeza.
-                      </p>
-                      
-                      <div className="space-y-3">
-                          <label className="flex items-center space-x-3 cursor-pointer">
-                              <input
-                                  type="checkbox"
-                                  checked={termosAceitos}
-                                  onChange={(e) => setTermosAceitos(e.target.checked)}
-                                  className="form-checkbox h-5 w-5 text-slate-600 rounded"
-                              />
-                              <span className="text-gray-800 font-bold">
-                                  SIM, eu aceito o Termo e autorizo a gravação POV do serviço.
-                              </span>
-                          </label>
-
-                          {!termosAceitos && (
-                              <button 
-                                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 shadow-md" 
-                                  onClick={handleRecusaTermos}
-                              >
-                                  NÃO ACEITO (Entendo que não poderei prosseguir)
-                              </button>
-                          )}
-                      </div>
-                    </div>
-                    
-                    {/* BOTÃO DE PROSSEGUIR */}
-                    <button
-                      className={`w-full py-4 font-bold text-xl rounded-lg transition duration-300 shadow-2xl 
-                                  ${!termosAceitos ? 'bg-gray-400 cursor-not-allowed' : 'bg-gray-800 hover:bg-gray-900 text-white'}`}
-                      onClick={handleProximoPassoCheckout}
-                      disabled={!termosAceitos || !planoSelecionado}
-                    >
-                      Pagar com Pix: R$ {valorExibido}
-                    </button>
-                    
-                    {/* Aviso Legal */}
-                    <p className="text-center text-xs text-gray-500 pt-2">
-                      Valor da assinatura mensal recorrente, válido para calçadas de até 30m² em Bauru/SP.
-                    </p>
-                  </div>
-                )}
-                <button className="w-full mt-6 py-2 text-sm text-slate-700 hover:text-slate-900" onClick={() => setPasso(1)}>
-                    &larr; Voltar para o Cadastro
-                </button>
-              </div>
-              <InstagramButton />
-              </>
+                    <InstagramButton /> 
+                </>
             );
-          }
-          
-          // Passo 1: Tela de Cadastro de Cliente
-          if (passo === 1) {
-            return (
-              <> 
-              <div className="max-w-xl mx-auto p-6 md:p-10 bg-white shadow-2xl rounded-xl mt-8 border-4 border-slate-700">
-                <h1 className="text-3xl font-extrabold text-slate-700 text-center mb-1">Passo 1: Cliente Front</h1>
-                <HoccSubtitle /> 
-                <p className="text-gray-500 text-center mb-8">Precisamos destas informações para agendar, prestar o serviço e encontrar sua casa.</p>
-
-                <div className="space-y-4">
-                    <input
-                        type="text"
-                        name="nome"
-                        placeholder="Seu Nome Completo *"
-                        value={dadosCliente.nome}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
-                    />
-                    <input
-                        type="text"
-                        name="endereco"
-                        placeholder="Endereço de Limpeza (Rua, Número, Bairro) *"
-                        value={dadosCliente.endereco}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
-                    />
-                    {/* CAMPO PONTO DE REFERÊNCIA */}
-                    <input
-                        type="text"
-                        name="pontoReferencia"
-                        placeholder="Ponto de Referência (Obrigatório para localização) *"
-                        value={dadosCliente.pontoReferencia}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
-                    />
-                    <input
-                        type="tel"
-                        name="whatsapp"
-                        placeholder="WhatsApp (DDD + Número) *"
-                        value={dadosCliente.whatsapp}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
-                    />
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="E-mail (para lembretes de pagamento) *"
-                        value={dadosCliente.email}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
-                    />
-                    <p className="text-sm text-slate-600 pt-2">
-                        Os campos marcados com um asterisco (<span className="text-red-600 font-bold">*</span>) são de preenchimento obrigatório.
-                    </p>
-                </div>
-
-                <button
-                    className={`w-full py-4 mt-8 font-bold text-xl rounded-lg transition duration-300 shadow-xl 
-                                ${isCadastroValid ? 'bg-gray-800 hover:bg-gray-900 text-white' : 'bg-gray-400 cursor-not-allowed text-gray-700'}`}
-                    onClick={handleProximoPassoCadastro}
-                    disabled={!isCadastroValid}
-                >
-                    Avançar para Escolha do Plano
-                </button>
-                <button className="w-full mt-3 py-2 text-sm text-slate-700 hover:text-slate-900" onClick={() => setPasso(0)}>
-                    &larr; Voltar para o Início
-                </button>
-              </div>
-              <InstagramButton />
-              </>
-            );
-          }
-
-          // Passo 0: Tela Inicial
-          return (
-            <> 
-            <div className="max-w-xl mx-auto p-6 md:p-10 bg-gray-50 shadow-2xl rounded-xl mt-8">
-              <h1 className="text-4xl font-extrabold text-slate-700 text-center mb-1">Front! Limpeza a Seco</h1>
-              <HoccSubtitle /> 
-              <p className="text-xl text-gray-600 text-center mb-10">Somos uma empresa de Manutenção e Conservação de calçadas em Bauru/SP.</p>
-
-              <div className="text-center space-y-4 mb-10">
-                <p className="text-gray-700 text-lg">
-                  Comprometimento com a Sustentabilidade e Preços Justos.
-                </p>
-                <p className="text-gray-700 text-lg font-semibold">
-                  Nossa metodologia de gravação POV (Point of View) viabiliza planos acessíveis para você.
-                </p>
-              </div>
-
-              <button
-                className="w-full py-5 bg-gray-800 hover:bg-gray-900 text-white font-black text-2xl rounded-xl transition duration-300 shadow-2xl"
-                onClick={() => setPasso(1)}
-              >
-                CONSERVAR CALÇADA (Começar Contratação)
-              </button>
-
-              <div className="mt-8 text-center text-sm text-gray-500">
-                <p>Ao clicar, você será direcionado ao formulário de cadastro.</p>
-              </div>
-            </div>
-            <InstagramButton />
-            </>
-          );
         }
 
-        // Renderização do App
-        const rootElement = document.getElementById('root');
-        ReactDOM.createRoot(rootElement).render(<ContratacaoFront />);
-    </script>
+        // PASSO 1: Cadastro
+        if (passo === 1) {
+            return (
+                <>
+                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
+                        <Header
+                            titulo="Contrate a Front!"
+                            subtitulo="Passo 1: Cliente Front (Seus Dados)"
+                            passoAtual={1}
+                            totalPassos={3}
+                        />
+
+                        <p className="text-xs text-gray-500 mb-4"> Campos obrigatórios</p>
+
+                        <form className="space-y-4">
+                            <input
+                                type="text"
+                                name="nome"
+                                placeholder=" Nome Completo / Nome da Empresa"
+                                onChange={handleInputChange}
+                                value={formData.nome}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
+                            />
+                            <div className="space-y-2">
+                                <input
+                                    type="text"
+                                    name="endereco"
+                                    placeholder=" Endereço Completo (Rua, Número, Bairro)"
+                                    onChange={handleInputChange}
+                                    value={formData.endereco}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
+                                />
+                                <input
+                                    type="text"
+                                    name="pontoRef"
+                                    placeholder=" Ponto de Referência (Ex: Próximo à padaria X)"
+                                    onChange={handleInputChange}
+                                    value={formData.pontoRef}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
+                                />
+                            </div>
+
+                            {/* Sem Otimização de Localização (Gemini) */}
+
+                            <input
+                                type="tel"
+                                name="whatsapp"
+                                placeholder=" WhatsApp (apenas números)"
+                                onChange={handleInputChange}
+                                value={formData.whatsapp}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
+                            />
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder=" E-mail"
+                                onChange={handleInputChange}
+                                value={formData.email}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
+                            />
+                             <p className="text-xs text-gray-500">Usaremos seu e-mail para enviar lembretes de pagamento.</p>
+                        </form>
+
+                        <div className="flex justify-between mt-6">
+                            <button
+                                onClick={() => setPasso(0)}
+                                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-300"
+                            >
+                                Voltar
+                            </button>
+                            <button
+                                onClick={handleProximoPassoCadastro}
+                                disabled={!isCadastroValid}
+                                className={`px-6 py-3 font-bold text-white rounded-lg shadow-md transition duration-300 ${
+                                    isCadastroValid ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                Avançar para Escolha do Plano
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // PASSO 2: Escolha do Plano e Termos
+        if (passo === 2) {
+            
+            const planoDiario1 = (PLANOS.plano1.preco / 30).toFixed(2);
+            const planoDiario2 = (PLANOS.plano2.preco / 30).toFixed(2);
+
+            return (
+                <>
+                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-4xl">
+                        <Header
+                            titulo="Escolha o Plano"
+                            subtitulo="Passo 2: Escolha seu Plano de Conservação e Aceite os Termos"
+                            passoAtual={2}
+                            totalPassos={3}
+                        />
+
+                        {/* SELEÇÃO DE PLANOS */}
+                        <div className="grid md:grid-cols-2 gap-6 mb-8">
+                            {Object.values(PLANOS).map((plano, index) => (
+                                <div
+                                    key={index}
+                                    className={`p-6 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
+                                        plano.nome === planoSelecionado
+                                            ? 'border-black shadow-lg bg-gray-50'
+                                            : 'border-gray-300 hover:border-gray-500'
+                                    }`}
+                                    onClick={() => setPlanoSelecionado(plano.nome)}
+                                >
+                                    <h3 className="text-xl font-bold mb-1 text-black">{plano.nome}</h3>
+                                    <p className="text-3xl font-extrabold text-black mb-1">
+                                        R$ {plano.preco.toFixed(2)}
+                                        <span className="text-sm font-normal text-gray-500"> / Ao Mês</span>
+                                    </p>
+                                    
+                                    {/* CUSTO DIÁRIO */}
+                                    <p className="text-sm font-semibold text-green-600 mb-2">
+                                        Apenas R$ {plano.nome === PLANOS.plano1.nome ? planoDiario1 : planoDiario2} por dia!
+                                    </p>
+
+                                    <p className="text-xs text-gray-600 font-semibold mb-4">{plano.limpezas}</p>
+
+                                    {/* DETALHES ESTILIZADOS */}
+                                    <div className="space-y-2 text-sm">
+                                        {plano.detalhes.map((detalhe, i) => (
+                                            <div key={i} className="flex items-start space-x-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black lucide lucide-check-circle mt-1 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 22 3-3"/><path d="m9 22 4-4"/></svg>
+                                                <span className="text-gray-700">{detalhe.replace('limpeza', 'conservação')}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* FOCO */}
+                                    <div className="mt-4 p-3 bg-white border border-gray-200 rounded-lg">
+                                        <p className="text-xs font-semibold text-black">Foco Principal:</p>
+                                        <p className="text-xs text-gray-600">{plano.foco}</p>
+                                    </div>
+
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* DESCONTO OPCIONAL (8%) */}
+                        <div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center mb-6">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={descontoAtivo}
+                                    onChange={() => setDescontoAtivo(!descontoAtivo)}
+                                    className="h-5 w-5 text-black border-gray-300 rounded focus:ring-black"
+                                />
+                                <span className="text-sm font-medium text-gray-800">
+                                    Quero <span className="text-green-600 font-bold">8% OFF</span>! (Eu fornecerei os sacos de lixo para a coleta)
+                                </span>
+                            </label>
+                            <span className="text-sm font-bold text-green-700">- 8%</span>
+                        </div>
+
+                        {/* TERMO DE CONSENTIMENTO */}
+                        <div className="bg-white p-4 border border-gray-300 rounded-lg mb-6">
+                            <h4 className="font-bold text-black mb-2">TERMO DE CONSENTIMENTO PARA CONTEÚDO</h4>
+                            <p className="text-sm text-gray-700 mb-3">
+                                Eu concordo em ceder as imagens da conservação da minha calçada para a criação de conteúdo do projeto Hocc.
+                            </p>
+                            <ul className="text-xs text-gray-600 list-disc list-inside space-y-1 ml-4">
+                                <li>Motivo: As imagens são essenciais para documentar a performance do serviço, a metodologia a seco e educar sobre conservação (Metodologia POV).</li>
+                                <li>Oportunidade: O cliente tem total liberdade para usar o espaço do vídeo para divulgar seus próprios produtos, serviços ou mídias.</li>
+                                <li>Privacidade: Não gravamos rostos, endereços residenciais completos, placas de veículos ou pontos de referência privados. O foco é estritamente na calçada e no serviço executado.</li>
+                            </ul>
+                            <div className="flex items-center mt-3">
+                                <input
+                                    type="checkbox"
+                                    checked={termoAceito}
+                                    onChange={() => setTermoAceito(!termoAceito)}
+                                    className="h-4 w-4 text-black border-gray-300 rounded focus:ring-black"
+                                />
+                                <label className="ml-2 text-sm text-black font-medium">
+                                    Sim, li e aceito os termos acima.
+                                </label>
+                            </div>
+                        </div>
+
+
+                        <div className="flex justify-between mt-6">
+                            <button
+                                onClick={() => setPasso(1)}
+                                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-300"
+                            >
+                                Voltar (Alterar Cadastro)
+                            </button>
+                            <button
+                                onClick={() => setPasso(3)}
+                                disabled={!termoAceito}
+                                className={`px-6 py-3 font-bold text-white rounded-lg shadow-md transition duration-300 ${
+                                    termoAceito ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                Avançar para Pagamento
+                            </button>
+                        </div>
+
+                        {/* Tela de Recusa (Ação alternativa se Termo não for aceito) */}
+                        {!termoAceito && (
+                            <div className="mt-4 text-center">
+                                <button
+                                    onClick={() => setPasso(4)}
+                                    className="text-sm text-red-600 hover:text-red-800 transition duration-300 underline"
+                                >
+                                    Não aceito os termos. Quero sair.
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </>
+            );
+        }
+
+        // PASSO 3: Pagamento Pix (Confirmação)
+        if (passo === 3) {
+            const handleCopyPix = () => {
+                // Função para copiar a chave Pix (CNPJ) para a área de transferência
+                navigator.clipboard.writeText(PIX_CNPJ).then(() => {
+                    // Mensagem para o usuário
+                    const messageBox = document.createElement('div');
+                    messageBox.innerHTML = '✅ Chave Pix CNPJ copiada com sucesso!';
+                    messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #d1e7dd; border: 1px solid #badbcc; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold; color: #0f5132;';
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => document.body.removeChild(messageBox), 3000);
+                }, () => {
+                    // Fallback para ambientes restritos
+                    const tempInput = document.createElement('textarea');
+                    tempInput.value = PIX_CNPJ;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    
+                    const messageBox = document.createElement('div');
+                    messageBox.innerHTML = '✅ Chave Pix CNPJ copiada com sucesso (Fallback)!';
+                    messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #d1e7dd; border: 1px solid #badbcc; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold; color: #0f5132;';
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => document.body.removeChild(messageBox), 3000);
+                });
+            };
+
+            return (
+                <>
+                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
+                        <Header
+                            titulo="Confirmação e Pagamento"
+                            subtitulo="Passo 3: Finalize a Contratação via Pix"
+                            passoAtual={3}
+                            totalPassos={3}
+                        />
+
+                        {/* TICKET RESUMO DO PEDIDO */}
+                        <div className="ticket-dashed-border p-4 mb-6 bg-gray-50">
+                            <p className="text-center text-sm font-extrabold text-black mb-3 border-b border-gray-300 pb-2">
+                                📋 RESUMO DO PEDIDO
+                            </p>
+                            <div className="text-sm space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Plano Escolhido:</span>
+                                    <span className="font-semibold text-black">{planoEscolhido}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">1. Valor Base (Mensal):</span>
+                                    <span className="font-semibold">R$ {precoBase.toFixed(2)}</span>
+                                </div>
+                                
+                                {/* DETALHE DO DESCONTO (ENFATIZANDO A ECONOMIA) */}
+                                {descontoAtivo && (
+                                    <div className="flex justify-between pt-1 border-t border-dashed border-gray-300">
+                                        <span className="text-green-700 font-medium">2. Desconto Aplicado (<span className="text-blue-600 font-bold">8% OFF</span>):</span>
+                                        <span className="text-green-700 font-bold">- R$ {valorDesconto}</span>
+                                    </div>
+                                )}
+                                
+                                {/* TOTAL FINAL */}
+                                <div className="flex justify-between text-lg font-bold mt-3 pt-3 border-t-2 border-black">
+                                    <span className="text-black">{descontoAtivo ? '3. TOTAL A PAGAR (COM DESCONTO):' : '2. TOTAL A PAGAR (PIX):'}</span>
+                                    <span className={`font-extrabold ${descontoAtivo ? 'text-blue-600' : 'text-black'}`}>R$ {precoFinal}</span>
+                                </div>
+
+                                <div className="flex justify-between pt-2">
+                                     <span className="text-gray-600">Custo por dia:</span>
+                                     <span className="font-bold text-black">R$ {precoDiario}</span>
+                                </div>
+
+                                {descontoAtivo && (
+                                    <p className="text-xs text-green-700 font-semibold text-right pt-1">
+                                        🎉 Você economizou R$ {valorDesconto} fornecendo os sacos de lixo!
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* INSTRUÇÕES DE PAGAMENTO */}
+                        <div className="mb-6 space-y-4">
+                            <p className="text-center font-bold text-black text-lg">
+                                Chave Pix CNPJ:
+                            </p>
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={handleCopyPix}
+                                    className="bg-black text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 transition duration-300"
+                                >
+                                    Copiar Chave Pix CNPJ Banco Inter
+                                </button>
+                            </div>
+                            <p className="text-center text-xs text-gray-600">
+                                🔑 O valor é de R$ {precoFinal} e deve ser pago via Pix para o CNPJ acima.
+                            </p>
+                            <div className="bg-gray-100 p-3 rounded-lg text-center">
+                                <p className="text-xs text-gray-700 font-semibold">
+                                    GARANTIA FRONT: Serviço liberado em até 5 dias após a contratação ou devolvemos 100% do seu dinheiro.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* BOTÃO DE FINALIZAÇÃO (WHATSAPP) - NOVO ESTILO E CORRIGIDO COM <a> */}
+                        <div className="flex flex-col items-center space-y-3">
+                            {/* Uso de <a> garante o redirecionamento em ambientes restritos */}
+                            <a
+                                href={whatsappUrl} // URL completa do WhatsApp com mensagem
+                                target="_blank" // Abre em uma nova aba para não perder a página atual
+                                rel="noopener noreferrer"
+                                className="btn-finalize w-full py-4 px-6 text-lg font-bold text-white rounded-full shadow-lg shadow-blue-500/50 uppercase tracking-wider flex items-center justify-center space-x-2 text-center"
+                            >
+                                {/* Ícone do WhatsApp (mantendo a cor branca para contraste) */}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-whatsapp text-white"><path d="M12.9 5.3a8.9 8.9 0 0 0-7.8 15.3l-.2 1.4 1.4-.2A8.9 8.9 0 0 0 12.9 5.3zm-5.7 1.5a7.3 7.3 0 0 1 12.4 5.3c0 1.2-.4 2.3-1.1 3.2L16 17.5l-2.7-.7a.9.9 0 0 0-.8.1l-2.4 2.4a.9.9 0 0 1-.6.2 1.9 1.9 0 0 1-1.3-.5l-1.4-1.4a.9.9 0 0 1-.2-.6 1.9 1.9 0 0 1 .5-1.3l2.4-2.4a.9.9 0 0 0 .1-.8l-.7-2.7 1.2-1.2z"/></svg>
+                                <span>FINALIZAR CONTRATAÇÃO (ENVIAR COMPROVANTE)</span>
+                            </a>
+                            <p className="text-xs text-red-500 font-medium">
+                                CLIQUE ACIMA: Você será redirecionado para o WhatsApp com os dados do pedido prontos para agendamento!
+                            </p>
+                        </div>
+
+                        <div className="flex justify-start mt-6">
+                             <button
+                                onClick={() => setPasso(2)}
+                                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-300"
+                            >
+                                Voltar (Alterar Plano)
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // PASSO 4: Recusa dos Termos (Saída)
+        if (passo === 4) {
+             return (
+                <>
+                    <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg text-center">
+                        <Header
+                            titulo="Entendemos Sua Decisão"
+                            subtitulo="Acompanhe Nosso Conteúdo!"
+                            passoAtual={null}
+                            totalPassos={3}
+                        />
+
+                        <p className="text-gray-700 mb-6">
+                            Sentimos muito que não podemos prosseguir com a contratação. Para entender melhor nossa metodologia de trabalho, convidamos você a seguir nosso conteúdo:
+                        </p>
+
+                        <div className="space-y-4">
+                            <a
+                                href={YOUTUBE_HOC_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full inline-block bg-red-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-red-700 transition duration-300"
+                            >
+                                Siga o Canal Hocc 1 ao 1 (YouTube)
+                            </a>
+                            <a
+                                href={INSTAGRAM_ARTHUR_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full inline-block bg-pink-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-pink-700 transition duration-300"
+                            >
+                                Siga o Fundador (@Arthurhocc)
+                            </a>
+                        </div>
+                         <div className="flex justify-center mt-6">
+                            <button
+                                onClick={() => setPasso(0)}
+                                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-300"
+                            >
+                                Voltar ao Início
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        return null; // Caso de erro ou passo inválido
+    };
+
+    // Renderiza o App no elemento com ID 'app'
+    const root = ReactDOM.createRoot(document.getElementById('app'));
+    root.render(<App />);
+</script>
 </body>
 </html>
