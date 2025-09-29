@@ -175,7 +175,7 @@
             );
         }, [formData]);
 
-        // Mensagem final para o WhatsApp com os emojis e formatação pedida
+        // Mensagem final para o WhatsApp com os emojis e formatação pedida (USANDO \n EXPLÍCITO)
         const whatsappMessage = useMemo(() => {
             const descontoText = descontoAtivo 
                 ? `SIM (Economia de R$ ${valorDesconto})` 
@@ -185,37 +185,8 @@
             const valorFinalText = `R$ ${precoFinal}`;
             const dateContratacao = new Date().toLocaleDateString('pt-BR'); // Data atual para formalidade
             
-            // CONTEÚDO DA MENSAGEM NOVO: Emojis literais para garantir a codificação
-            const mensagem = `
-*🌟 CONTRATAÇÃO FRONT! - PRÓXIMO PASSO*
-Olá, ${formData.nome}! Recebemos seu cadastro com sucesso. 
-Para desbloquear o serviço e agendarmos a primeira conservação, por favor, realize o pagamento via Pix do valor total e *envie o comprovante nesta conversa*.
-
-*👤 DADOS DO CLIENTE E LOCALIZAÇÃO*
-* ✍️ Nome: ${formData.nome}
-* 📍 Endereço: ${formData.endereco}
-* 🚩 Ponto de Ref.: ${formData.pontoRef}
-* 📞 WhatsApp: ${formData.whatsapp}
-* 📧 E-mail: ${formData.email}
-
-*💸 DETALHES FINANCEIROS*
-* ⭐ Plano Escolhido: ${planoEscolhido}
-* 🗓️ Custo Diário: R$ ${precoDiario}
-* 💵 Valor Original: ${valorBaseText}
-* 🎁 Desconto de 8% Aplicado: ${descontoText}
-* ✨ TOTAL A PAGAR (PIX): ${valorFinalText}
-* 📅 Data da Contratação: ${dateContratacao}
-
-*✅ TERMOS*
-* 🎬 Termo de Gravação para Conteúdo (Hocc): ACEITO
-* 📄 Comprovante Pix: (A ser anexado pelo cliente)
-
-_Aguardamos o comprovante para entrarmos em contato em breve. Agradecemos a confiança!_
-
-*Nossas Mídias:*
-• Instagram: ${INSTAGRAM_URL}
-• YouTube: ${YOUTUBE_HOC_URL}
-            `.trim();
+            // CONTEÚDO DA MENSAGEM: Usando \n para forçar a quebra de linha no encoding da URL.
+            const mensagem = `*🌟 CONTRATAÇÃO FRONT! - PRÓXIMO PASSO* \nOlá, ${formData.nome}! Recebemos seu cadastro com sucesso. \nPara desbloquear o serviço e agendarmos a primeira conservação, por favor, realize o pagamento via Pix do valor total e *envie o comprovante nesta conversa*. \n\n*👤 DADOS DO CLIENTE E LOCALIZAÇÃO* \n* ✍️ Nome: ${formData.nome} \n* 📍 Endereço: ${formData.endereco} \n* 🚩 Ponto de Ref.: ${formData.pontoRef} \n* 📞 WhatsApp: ${formData.whatsapp} \n* 📧 E-mail: ${formData.email} \n\n*💸 DETALHES FINANCEIROS* \n* ⭐ Plano Escolhido: ${planoEscolhido} \n* 🗓️ Custo Diário: R$ ${precoDiario} \n* 💵 Valor Original: ${valorBaseText} \n* 🎁 Desconto de 8% Aplicado: ${descontoText} \n* ✨ TOTAL A PAGAR (PIX): ${valorFinalText} \n* 📅 Data da Contratação: ${dateContratacao} \n\n*✅ TERMOS* \n* 🎬 Termo de Gravação para Conteúdo (Hocc): ACEITO \n* 📄 Comprovante Pix: (A ser anexado pelo cliente) \n\n_Aguardamos o comprovante para entrarmos em contato em breve. Agradecemos a confiança!_ \n\n*Nossas Mídias:* \n• Instagram: ${INSTAGRAM_URL} \n• YouTube: ${YOUTUBE_HOC_URL}`.trim();
 
             return encodeURIComponent(mensagem);
         }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase, precoDiario]);
