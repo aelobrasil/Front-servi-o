@@ -32,37 +32,16 @@
             box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
         }
 
-        /* ESTILO PARA O BOTÃO FINALIZAR (PASSO 3) */
+        /* NOVO ESTILO PARA O BOTÃO FINALIZAR (PASSO 3) */
         .btn-finalize {
             transition: all 0.3s ease-in-out;
+            /* Gradiente de azul para chamar atenção, similar ao branding do Plano Hocc */
             background-image: linear-gradient(to right, #0077B6 0%, #00B4D8 100%);
         }
         .btn-finalize:hover {
-            background-image: linear-gradient(to right, #00B4D8 0%, #0077B6 100%);
+            background-image: linear-gradient(to right, #00B4D8 0%, #0077B6 100%); /* Inverte o gradiente */
             transform: scale(1.02); 
-            box-shadow: 0 10px 20px rgba(0, 119, 182, 0.5);
-        }
-        
-        /* ESTILO PARA O MODAL DE INSTRUÇÃO (COPIAR/COLAR) */
-        .copy-success-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #22c55e; /* Green 600 */
-            color: white;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            z-index: 1000;
-            text-align: center;
-            font-size: 1.25rem;
-            font-weight: bold;
-            animation: fadeIn 0.3s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -40%); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
+            box-shadow: 0 10px 20px rgba(0, 119, 182, 0.5); /* Sombra mais proeminente */
         }
     </style>
     <!-- Carrega React, ReactDOM e Babel para rodar o JSX no navegador -->
@@ -75,7 +54,7 @@
 <div id="app"></div>
 
 <script type="text/babel">
-    const { useState, useMemo, useCallback } = React;
+    const { useState, useMemo } = React;
 
     // --- CONSTANTES ---
     const INSTAGRAM_URL = "https://instagram.com/Front.ep1";
@@ -114,6 +93,7 @@
 
     // --- COMPONENTES REUTILIZÁVEIS ---
 
+    // 1. Botão Flutuante do Instagram
     const InstagramButton = () => (
         <a 
             href={INSTAGRAM_URL} 
@@ -121,10 +101,12 @@
             rel="noopener noreferrer" 
             className="instagram-btn bg-black text-white hover:bg-gray-800 transition-colors duration-300 shadow-xl rounded-full p-4 flex items-center justify-center space-x-2"
         >
+            {/* Ícone simples do Instagram (SVG) */}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.5" y1="6.5" y2="6.5"/></svg>
         </a>
     );
 
+    // 2. Componente de Cabeçalho
     const Header = ({ titulo, subtitulo, passoAtual, totalPassos, isHome = false }) => (
         <div className="text-center mb-6">
             <div className="flex justify-center items-center space-x-2 mb-2">
@@ -150,7 +132,7 @@
         const [passo, setPasso] = useState(0); // 0: Início, 1: Cadastro, 2: Plano, 3: Pagamento, 4: Recusa
         const [descontoAtivo, setDescontoAtivo] = useState(false);
         const [termoAceito, setTermoAceito] = useState(false);
-        const [showCopyMessage, setShowCopyMessage] = useState(false);
+        const [isLoading, setIsLoading] = useState(false); // Mantido por segurança, mas não usado sem Gemini
 
         const [formData, setFormData] = useState({
             nome: '',
@@ -183,97 +165,68 @@
         // --- VALIDAÇÕES ---
 
         const isCadastroValid = useMemo(() => {
+            // Verifica se todos os campos obrigatórios estão preenchidos
             return (
                 formData.nome.trim() !== '' &&
                 formData.endereco.trim() !== '' &&
                 formData.pontoRef.trim() !== '' &&
                 formData.whatsapp.trim().length >= 8 && 
-                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()) // Validação básica de email
             );
         }, [formData]);
 
-        // MENSAGEM DETALHADA PARA COPIAR (Onde a formatação e emojis são 100% preservados)
-        const fullMessageToCopy = useMemo(() => {
+        // Mensagem final para o WhatsApp com os emojis e formatação pedida
+        const whatsappMessage = useMemo(() => {
+            const descontoText = descontoAtivo 
+                ? `SIM (Economia de R$ ${valorDesconto})` 
+                : `NÃO`;
+            
+            const valorBaseText = `R$ ${precoBase.toFixed(2)}`;
             const valorFinalText = `R$ ${precoFinal}`;
-            const descontoText = descontoAtivo ? `SIM (- R$ ${valorDesconto})` : `NÃO (R$ 0,00)`;
-            const dateContratacao = new Date().toLocaleDateString('pt-BR');
+            const dateContratacao = new Date().toLocaleDateString('pt-BR'); // Data atual para formalidade
             
-            // AQUI ESTÁ A MENSAGEM COMPLETA E FORMATADA!
-            return `
-*📝 NOVA CONTRATAÇÃO FRONT! ✅*
+            // CONTEÚDO DA MENSAGEM: Agora sem emojis, mantendo a formalidade e completude.
+            const mensagem = `
+*CONTRATAÇÃO FRONT! - PRÓXIMO PASSO*
+Prezado(a) ${formData.nome},
 
-Olá, Equipe! Meu nome é *${formData.nome}* e eu já realizei o pagamento Pix.
-Estou enviando este comprovante anexado.
+Recebemos seu cadastro com sucesso. Para desbloquear o serviço e agendarmos a primeira conservação, por favor, realize o pagamento via Pix do valor total e *envie o comprovante nesta conversa*.
 
-*📋 RESUMO DO PEDIDO:*
-* ⭐ Plano: ${planoEscolhido}
-* 💵 Valor Pix: ${valorFinalText}
-* 🎁 Desconto 8% (Sacos): ${descontoText}
-* 📅 Data da Contratação: ${dateContratacao}
+*DADOS DO CLIENTE E LOCALIZAÇÃO*
+* Nome: ${formData.nome}
+* Endereço: ${formData.endereco}
+* Ponto de Ref.: ${formData.pontoRef}
+* WhatsApp: ${formData.whatsapp}
+* E-mail: ${formData.email}
 
-*📍 LOCALIZAÇÃO E CONTATO:*
-* 🛣️ Endereço: ${formData.endereco}
-* 🚩 Ponto de Referência: ${formData.pontoRef}
-* 📞 WhatsApp: ${formData.whatsapp}
-* 📧 E-mail: ${formData.email}
+*DETALHES FINANCEIROS*
+* Plano Escolhido: ${planoEscolhido}
+* Custo Diário: R$ ${precoDiario}
+* Valor Original: ${valorBaseText}
+* Desconto de 8% Aplicado: ${descontoText}
+* TOTAL A PAGAR (PIX): ${valorFinalText}
+* Data da Contratação: ${dateContratacao}
 
-*➡️ Por favor, agendar a primeira conservação no meu endereço. Obrigado(a)! 🗓️*
-`.trim();
-        }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase]);
+*TERMOS E CONDIÇÕES*
+* Termo de Gravação para Conteúdo (Hocc): ACEITO
+* Comprovante Pix: (A ser anexado pelo cliente)
 
-        // MENSAGEM MINIMALISTA PARA URL (Apenas para abrir o chat sem corromper)
-        const whatsappMessageMinimal = useMemo(() => {
-            return encodeURIComponent(`Olá, sou o(a) cliente ${formData.nome}. Minha mensagem detalhada foi copiada e vou colar agora. ➡️`);
-        }, [formData]);
+_Aguardamos o comprovante para entrarmos em contato em breve e darmos início ao agendamento. Agradecemos a confiança em nosso serviço._
 
-        // URL USADA PARA NAVEGAÇÃO
+*Nossas Mídias:*
+\u2022 Instagram: ${INSTAGRAM_URL}
+\u2022 YouTube: ${YOUTUBE_HOC_URL}
+            `.trim();
+
+            return encodeURIComponent(mensagem);
+        }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase, precoDiario]);
+
+        // Criando a URL final do WhatsApp aqui
         const whatsappUrl = useMemo(() => {
-             return `https://wa.me/55${WHATSAPP_NUMERO}?text=${whatsappMessageMinimal}`;
-        }, [whatsappMessageMinimal]);
+             return `https://wa.me/55${WHATSAPP_NUMERO}?text=${whatsappMessage}`;
+        }, [whatsappMessage]);
 
-
-        // --- HANDLERS DE AÇÃO ---
-
-        const handleFinalizarContratacao = useCallback((e) => {
-            e.preventDefault(); // Impede a navegação imediata
-            
-            // Tenta copiar a mensagem completa
-            const copyPromise = navigator.clipboard.writeText(fullMessageToCopy);
-
-            copyPromise.then(() => {
-                // 1. Mostrar instrução de sucesso (mensagem copiada)
-                setShowCopyMessage(true);
-
-                // 2. Redirecionar após um pequeno delay para o usuário ler a instrução
-                setTimeout(() => {
-                    window.open(whatsappUrl, '_blank');
-                    setShowCopyMessage(false);
-                }, 1500); // 1.5 segundos para o usuário ver a mensagem copiada
-
-            }).catch(err => {
-                console.error("Falha ao copiar para o clipboard. Tentando fallback...", err);
-
-                // FALLBACK: Usar o método antigo (que falha, mas é melhor que nada)
-                const tempInput = document.createElement('textarea');
-                tempInput.value = fullMessageToCopy;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-
-                // Mostrar instrução de sucesso (mensagem copiada)
-                setShowCopyMessage(true);
-
-                // Redirecionar
-                setTimeout(() => {
-                    window.open(whatsappUrl, '_blank');
-                    setShowCopyMessage(false);
-                }, 1500);
-            });
-
-        }, [fullMessageToCopy, whatsappUrl]);
-
-        // --- OUTROS HANDLERS ---
+        // --- HANDLERS DE NAVEGAÇÃO ---
 
         const handleInputChange = (e) => {
             const { name, value } = e.target;
@@ -282,8 +235,10 @@ Estou enviando este comprovante anexado.
 
         const handleProximoPassoCadastro = () => {
             if (isCadastroValid) {
+                // Avança diretamente para o Passo 2: Escolha do Plano
                 setPasso(2);
             } else {
+                // Mensagem de erro (substituindo o alert)
                 const messageBox = document.createElement('div');
                 messageBox.innerHTML = '⚠️ Por favor, preencha todos os campos obrigatórios corretamente para avançar.';
                 messageBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fefcbf; border: 1px solid #fbd38d; padding: 15px; border-radius: 8px; z-index: 100; font-weight: bold;';
@@ -375,6 +330,8 @@ Estou enviando este comprovante anexado.
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-black focus:border-black"
                                 />
                             </div>
+
+                            {/* Sem Otimização de Localização (Gemini) */}
 
                             <input
                                 type="tel"
@@ -583,14 +540,6 @@ Estou enviando este comprovante anexado.
 
             return (
                 <>
-                    {/* Modal de sucesso da cópia */}
-                    {showCopyMessage && (
-                        <div className="copy-success-modal">
-                            <p className="text-3xl mb-3">✨ MENSAGEM COPIADA! ✨</p>
-                            <p className="text-xl font-normal">Ao abrir o chat, *COLE* no campo de texto para enviar todos os detalhes!</p>
-                        </div>
-                    )}
-
                     <div className="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
                         <Header
                             titulo="Confirmação e Pagamento"
@@ -664,23 +613,21 @@ Estou enviando este comprovante anexado.
                             </div>
                         </div>
                         
-                        {/* BOTÃO DE FINALIZAÇÃO (WHATSAPP COM CÓPIA) */}
+                        {/* BOTÃO DE FINALIZAÇÃO (WHATSAPP) - NOVO ESTILO E CORRIGIDO COM <a> */}
                         <div className="flex flex-col items-center space-y-3">
+                            {/* Uso de <a> garante o redirecionamento em ambientes restritos */}
                             <a
-                                href={whatsappUrl} // URL minimalista (apenas para abrir o chat)
-                                target="_blank"
+                                href={whatsappUrl} // URL completa do WhatsApp com mensagem
+                                target="_blank" // Abre em uma nova aba para não perder a página atual
                                 rel="noopener noreferrer"
-                                onClick={handleFinalizarContratacao}
                                 className="btn-finalize w-full py-4 px-6 text-lg font-bold text-white rounded-full shadow-lg shadow-blue-500/50 uppercase tracking-wider flex items-center justify-center space-x-2 text-center"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clipboard-check text-white"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
-                                <span>COPIAR E ABRIR WHATSAPP (AÇÃO FINAL)</span>
+                                {/* Ícone do WhatsApp (mantendo a cor branca para contraste) */}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-whatsapp text-white"><path d="M12.9 5.3a8.9 8.9 0 0 0-7.8 15.3l-.2 1.4 1.4-.2A8.9 8.9 0 0 0 12.9 5.3zm-5.7 1.5a7.3 7.3 0 0 1 12.4 5.3c0 1.2-.4 2.3-1.1 3.2L16 17.5l-2.7-.7a.9.9 0 0 0-.8.1l-2.4 2.4a.9.9 0 0 1-.6.2 1.9 1.9 0 0 1-1.3-.5l-1.4-1.4a.9.9 0 0 1-.2-.6 1.9 1.9 0 0 1 .5-1.3l2.4-2.4a.9.9 0 0 0 .1-.8l-.7-2.7 1.2-1.2z"/></svg>
+                                <span>FINALIZAR CONTRATAÇÃO (ENVIAR COMPROVANTE)</span>
                             </a>
-                            <p className="text-sm text-black font-extrabold mt-2 p-2 bg-yellow-100 border border-yellow-400 rounded-md">
-                                🚨 IMPORTANTE: Depois de clicar, **COLE** a mensagem no chat do WhatsApp para enviar o pedido completo e formatado!
-                            </p>
                             <p className="text-xs text-red-500 font-medium">
-                                Esta é a única forma de garantir 100% da formatação e dos emojis, contornando o limite de URL dos celulares.
+                                CLIQUE ACIMA: Você será redirecionado para o WhatsApp com os dados do pedido prontos para agendamento!
                             </p>
                         </div>
 
