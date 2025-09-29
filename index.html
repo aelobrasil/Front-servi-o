@@ -175,21 +175,15 @@
             );
         }, [formData]);
 
-        // Mensagem final para o WhatsApp com os emojis e formatação pedida (USANDO \n EXPLÍCITO)
+        // Mensagem final para o WhatsApp (AGORA MINIMALISTA)
         const whatsappMessage = useMemo(() => {
-            const descontoText = descontoAtivo 
-                ? `SIM (Economia de R$ ${valorDesconto})` 
-                : `NÃO`;
-            
-            const valorBaseText = `R$ ${precoBase.toFixed(2)}`;
             const valorFinalText = `R$ ${precoFinal}`;
-            const dateContratacao = new Date().toLocaleDateString('pt-BR'); // Data atual para formalidade
             
-            // CONTEÚDO DA MENSAGEM: Usando \n para forçar a quebra de linha no encoding da URL.
-            const mensagem = `*🌟 CONTRATAÇÃO FRONT! - PRÓXIMO PASSO* \nOlá, ${formData.nome}! Recebemos seu cadastro com sucesso. \nPara desbloquear o serviço e agendarmos a primeira conservação, por favor, realize o pagamento via Pix do valor total e *envie o comprovante nesta conversa*. \n\n*👤 DADOS DO CLIENTE E LOCALIZAÇÃO* \n* ✍️ Nome: ${formData.nome} \n* 📍 Endereço: ${formData.endereco} \n* 🚩 Ponto de Ref.: ${formData.pontoRef} \n* 📞 WhatsApp: ${formData.whatsapp} \n* 📧 E-mail: ${formData.email} \n\n*💸 DETALHES FINANCEIROS* \n* ⭐ Plano Escolhido: ${planoEscolhido} \n* 🗓️ Custo Diário: R$ ${precoDiario} \n* 💵 Valor Original: ${valorBaseText} \n* 🎁 Desconto de 8% Aplicado: ${descontoText} \n* ✨ TOTAL A PAGAR (PIX): ${valorFinalText} \n* 📅 Data da Contratação: ${dateContratacao} \n\n*✅ TERMOS* \n* 🎬 Termo de Gravação para Conteúdo (Hocc): ACEITO \n* 📄 Comprovante Pix: (A ser anexado pelo cliente) \n\n_Aguardamos o comprovante para entrarmos em contato em breve. Agradecemos a confiança!_ \n\n*Nossas Mídias:* \n• Instagram: ${INSTAGRAM_URL} \n• YouTube: ${YOUTUBE_HOC_URL}`.trim();
+            // MENSAGEM CURTA E FUNCIONAL
+            const mensagem = `*✅ FINALIZAÇÃO FRONT!* \nOlá, sou o(a) cliente *${formData.nome}*. \n\nRealizei o pagamento de *${valorFinalText}* (Plano: ${planoEscolhido}) via Pix. \n\n*➡️ Por favor, me envie o comprovante (anexo) para agendar a primeira conservação. 🗓️*`;
 
             return encodeURIComponent(mensagem);
-        }, [formData, planoEscolhido, precoFinal, valorDesconto, descontoAtivo, precoBase, precoDiario]);
+        }, [formData, planoEscolhido, precoFinal]);
 
         // Criando a URL final do WhatsApp aqui
         const whatsappUrl = useMemo(() => {
@@ -583,7 +577,7 @@
                             </div>
                         </div>
                         
-                        {/* BOTÃO DE FINALIZAÇÃO (WHATSAPP) - NOVO ESTILO E CORRIGIDO COM <a> */}
+                        {/* BOTÃO DE FINALIZAÇÃO (WHATSAPP) */}
                         <div className="flex flex-col items-center space-y-3">
                             {/* Uso de <a> garante o redirecionamento em ambientes restritos */}
                             <a
